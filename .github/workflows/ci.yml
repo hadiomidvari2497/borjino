@@ -16,6 +16,32 @@ jobs:
       matrix:
         php-version: ['8.2', '8.3', '8.4']
 
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: borjino_test
+          MYSQL_USER: borjino
+          MYSQL_PASSWORD: borjino
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    env:
+      DB_DRIVER: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: borjino_test
+      DB_USERNAME: borjino
+      DB_PASSWORD: borjino
+      DB_CHARSET: utf8mb4
+      DB_COLLATION: utf8mb4_unicode_ci
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -44,3 +70,15 @@ jobs:
 
       - name: Bootstrap check
         run: php -r "require 'bootstrap/autoload.php'; echo 'Autoloader OK'.PHP_EOL;"
+
+      - name: Database migration smoke test
+        run: php database/migrate.php
+
+      - name: Verify applied migrations
+        run: |
+          php -r '
+          $pdo = new PDO("mysql:host=127.0.0.1;port=3306;dbname=borjino_test;charset=utf8mb4", "borjino", "borjino", [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+          $count = (int) $pdo->query("SELECT COUNT(*) FROM schema_migrations")->fetchColumn();
+          if ($count < 4) { fwrite(STDERR, "Expected at least 4 applied migrations, got {$count}.\n"); exit(1); }
+          echo "Applied migrations: {$count}\n";
+          '
