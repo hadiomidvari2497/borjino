@@ -23,6 +23,7 @@
             <div class="error"><?= htmlspecialchars((string) $error, ENT_QUOTES, 'UTF-8') ?></div>
         <?php endif; ?>
         <form method="post" action="/login">
+            <input type="hidden" name="_token" value="<?= htmlspecialchars((string) $csrf_token, ENT_QUOTES, 'UTF-8') ?>">
             <label for="username">نام کاربری</label>
             <input id="username" name="username" type="text" autocomplete="username" required>
             <label for="password">رمز عبور</label>
