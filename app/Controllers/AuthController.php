@@ -4,53 +4,63 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Services\AuthService;
+use App\Support\Csrf;
+use App\Support\Session;
 use App\Support\View;
 
 final class AuthController
 {
-    public function __construct(private readonly View $view)
-    {
+    public function __construct(
+        private View $view,
+        private AuthService $auth,
+    ) {
     }
 
-    public function showLogin(array $data = []): string
+    public function showLogin(): string
     {
-        return $this->view->render('auth/login', $data);
+        if ($this->auth->check()) {
+            header('Location: /dashboard', true, 302);
+            return '';
+        }
+
+        return $this->view->render('auth/login', [
+            'error' => Session::get('auth.error'),
+            'csrf_token' => Csrf::token(),
+        ]);
     }
 
     public function login(): string
     {
-        $username = trim($_POST['username'] ?? '');
-        $password = $_POST['password'] ?? '';
-
-        if ($username === '' || $password === '') {
-            return $this->view->render('auth/login', [
-                'error' => 'نام کاربری و رمز عبور الزامی است.',
-                'old' => ['username' => $username],
-            ]);
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            Session::put('auth.error', 'درخواست نامعتبر است. لطفاً دوباره تلاش کنید.');
+            header('Location: /login', true, 302);
+            return '';
         }
 
-        // TODO: Implement actual authentication against database
-        // For now, demo credentials: admin / admin123
-        if ($username === 'admin' && $password === 'admin123') {
-            // Set session (simplified)
-            $_SESSION['user'] = [
-                'username' => 'admin',
-                'is_admin' => true,
-            ];
-            header('Location: /dashboard');
-            exit;
+        $username = (string) ($_POST['username'] ?? '');
+        $password = (string) ($_POST['password'] ?? '');
+
+        if ($this->auth->attempt($username, $password)) {
+            Session::forget('auth.error');
+            header('Location: /dashboard', true, 302);
+            return '';
         }
 
-        return $this->view->render('auth/login', [
-            'error' => 'نام کاربری یا رمز عبور اشتباه است.',
-            'old' => ['username' => $username],
-        ]);
+        Session::put('auth.error', 'نام کاربری یا رمز عبور نادرست است.');
+        header('Location: /login', true, 302);
+        return '';
     }
 
-    public function logout(): void
+    public function logout(): string
     {
-        session_destroy();
-        header('Location: /login');
-        exit;
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            http_response_code(419);
+            return 'درخواست نامعتبر است.';
+        }
+
+        $this->auth->logout();
+        header('Location: /login', true, 302);
+        return '';
     }
 }
