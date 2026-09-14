@@ -8,7 +8,7 @@ use RuntimeException;
 
 final class Router
 {
-    /** @var array<string, array{handler: callable, params: array<int, string>, types: array<int, string>}> */
+    /** @var array<int, array{method: string, pattern: string, handler: callable, types: array<int, string>}> */
     private array $routes = [];
 
     public function get(string $path, callable $handler): void
@@ -38,58 +38,69 @@ final class Router
 
     private function addRoute(string $method, string $path, callable $handler): void
     {
-        $pattern = $this->convertPathToPattern($path);
-        $params = $this->extractParams($path);
-        $types = $this->extractTypes($path);
-        $this->routes[$method . ' ' . $pattern] = ['handler' => $handler, 'params' => $params, 'types' => $types];
+        [$pattern, $types] = $this->compilePath($path);
+        $this->routes[] = [
+            'method' => strtoupper($method),
+            'pattern' => $pattern,
+            'handler' => $handler,
+            'types' => $types,
+        ];
     }
 
-    private function convertPathToPattern(string $path): string
+    /** @return array{0: string, 1: array<int, string>} */
+    private function compilePath(string $path): array
     {
-        $escaped = preg_quote($path, '#');
-        $pattern = preg_replace('/\\\{([^}:]+)(:[^}]+)?\\\}/', '([^/]+)', $escaped);
-        return $pattern;
-    }
-
-    private function extractParams(string $path): array
-    {
-        preg_match_all('/\{([^}:]+)(:[^}]+)?\}/', $path, $matches);
-        return $matches[1] ?? [];
-    }
-
-    private function extractTypes(string $path): array
-    {
-        preg_match_all('/\{[^}:]+:([^}]+)\}/', $path, $matches);
+        $regex = '#^';
         $types = [];
-        foreach ($matches[1] ?? [] as $type) {
-            $types[] = $type;
+        $offset = 0;
+
+        preg_match_all('/\{([^}:]+)(?::([^}]+))?\}/', $path, $matches, PREG_OFFSET_CAPTURE);
+        foreach ($matches[0] ?? [] as $index => $match) {
+            $placeholder = (string) $match[0];
+            $position = (int) $match[1];
+            $regex .= preg_quote(substr($path, $offset, $position - $offset), '#');
+
+            $constraint = $matches[2][$index][0] ?? null;
+            $regex .= '(' . ($constraint !== null && $constraint !== '' ? $constraint : '[^/]+') . ')';
+            $types[] = $this->typeForConstraint($constraint);
+            $offset = $position + strlen($placeholder);
         }
-        return $types;
+
+        $regex .= preg_quote(substr($path, $offset), '#') . '$#';
+
+        return [$regex, $types];
+    }
+
+    private function typeForConstraint(?string $constraint): string
+    {
+        return match ($constraint) {
+            '\\d+', 'int', 'integer' => 'int',
+            'float', 'double' => 'float',
+            'bool', 'boolean' => 'bool',
+            default => 'string',
+        };
     }
 
     public function dispatch(string $method, string $path): mixed
     {
         $method = strtoupper($method);
 
-        foreach ($this->routes as $routeKey => $route) {
-            $parts = explode(' ', $routeKey, 2);
-            $routeMethod = $parts[0] ?? '';
-            $routePattern = $parts[1] ?? '';
-
-            if ($routeMethod !== $method) {
+        foreach ($this->routes as $route) {
+            if ($route['method'] !== $method) {
                 continue;
             }
 
-            $pattern = '#^' . $routePattern . '$#';
-            if (preg_match($pattern, $path, $matches)) {
-                array_shift($matches);
-                $args = [];
-                foreach ($matches as $i => $value) {
-                    $type = $route['types'][$i] ?? 'string';
-                    $args[] = $this->castValue($value, $type);
-                }
-                return $route['handler'](...$args);
+            if (preg_match($route['pattern'], $path, $matches) !== 1) {
+                continue;
             }
+
+            array_shift($matches);
+            $args = [];
+            foreach ($matches as $index => $value) {
+                $args[] = $this->castValue((string) $value, $route['types'][$index] ?? 'string');
+            }
+
+            return ($route['handler'])(...$args);
         }
 
         throw new RuntimeException('Route not found.', 404);
@@ -98,9 +109,9 @@ final class Router
     private function castValue(string $value, string $type): mixed
     {
         return match ($type) {
-            'int', 'integer', '\d+' => (int) $value,
-            'float', 'double' => (float) $value,
-            'bool', 'boolean' => (bool) $value,
+            'int' => (int) $value,
+            'float' => (float) $value,
+            'bool' => filter_var($value, FILTER_VALIDATE_BOOLEAN),
             default => $value,
         };
     }
