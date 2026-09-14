@@ -79,6 +79,6 @@ jobs:
           php -r '
           $pdo = new PDO("mysql:host=127.0.0.1;port=3306;dbname=borjino_test;charset=utf8mb4", "borjino", "borjino", [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
           $count = (int) $pdo->query("SELECT COUNT(*) FROM schema_migrations")->fetchColumn();
-          if ($count < 4) { fwrite(STDERR, "Expected at least 4 applied migrations, got {$count}.\n"); exit(1); }
+          if ($count < 13) { fwrite(STDERR, "Expected at least 13 applied migrations, got {$count}.\n"); exit(1); }
           echo "Applied migrations: {$count}\n";
           '
