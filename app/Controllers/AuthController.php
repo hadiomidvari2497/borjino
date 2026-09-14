@@ -32,7 +32,11 @@ final class AuthController
 
     public function login(): string
     {
-        Csrf::verify($_POST['_token'] ?? null);
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            Session::put('auth.error', 'درخواست نامعتبر است. لطفاً دوباره تلاش کنید.');
+            header('Location: /login', true, 302);
+            return '';
+        }
 
         $username = (string) ($_POST['username'] ?? '');
         $password = (string) ($_POST['password'] ?? '');
@@ -50,7 +54,11 @@ final class AuthController
 
     public function logout(): string
     {
-        Csrf::verify($_POST['_token'] ?? null);
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            http_response_code(419);
+            return 'درخواست نامعتبر است.';
+        }
+
         $this->auth->logout();
         header('Location: /login', true, 302);
         return '';
