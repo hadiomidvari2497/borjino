@@ -25,11 +25,6 @@ final class AuthService
             return false;
         }
 
-        if (password_needs_rehash((string) $user['password_hash'], PASSWORD_DEFAULT)) {
-            // Rehashing is intentionally left to the user-management flow so this
-            // authentication step remains read-only apart from last-login metadata.
-        }
-
         Session::regenerate();
         Session::put('auth.user_id', (int) $user['id']);
         Session::put('auth.username', (string) $user['username']);
@@ -48,6 +43,12 @@ final class AuthService
     {
         $id = Session::get('auth.user_id');
         return $id === null ? null : (int) $id;
+    }
+
+    public function username(): ?string
+    {
+        $username = Session::get('auth.username');
+        return $username === null ? null : (string) $username;
     }
 
     public function logout(): void
