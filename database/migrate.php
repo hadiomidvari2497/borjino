@@ -40,15 +40,17 @@ foreach ($files as $file) {
         continue;
     }
 
-    $pdo->beginTransaction();
     try {
+        // MySQL DDL statements implicitly commit transactions, so migrations
+        // are intentionally executed without wrapping them in a transaction.
         $pdo->exec($sql);
         $statement = $pdo->prepare('INSERT INTO schema_migrations (migration) VALUES (:migration)');
         $statement->execute(['migration' => $name]);
-        $pdo->commit();
         echo "Applied: {$name}" . PHP_EOL;
     } catch (Throwable $exception) {
-        $pdo->rollBack();
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
         fwrite(STDERR, "Migration failed: {$name}" . PHP_EOL . $exception->getMessage() . PHP_EOL);
         exit(1);
     }
