@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Services\AuthService;
+use App\Support\Csrf;
 use App\Support\Session;
 use App\Support\View;
 
@@ -25,11 +26,14 @@ final class AuthController
 
         return $this->view->render('auth/login', [
             'error' => Session::get('auth.error'),
+            'csrf_token' => Csrf::token(),
         ]);
     }
 
     public function login(): string
     {
+        Csrf::verify($_POST['_token'] ?? null);
+
         $username = (string) ($_POST['username'] ?? '');
         $password = (string) ($_POST['password'] ?? '');
 
@@ -46,6 +50,7 @@ final class AuthController
 
     public function logout(): string
     {
+        Csrf::verify($_POST['_token'] ?? null);
         $this->auth->logout();
         header('Location: /login', true, 302);
         return '';
