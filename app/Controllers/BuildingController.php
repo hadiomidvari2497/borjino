@@ -4,146 +4,166 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Middleware\AuthMiddleware;
+use App\Repositories\BuildingRepository;
+use App\Support\Csrf;
+use App\Support\Session;
 use App\Support\View;
+use Throwable;
 
 final class BuildingController
 {
-    public function __construct(private readonly View $view)
-    {
+    public function __construct(
+        private readonly View $view,
+        private readonly BuildingRepository $buildings,
+        private readonly AuthMiddleware $auth,
+    ) {
     }
 
     public function index(): string
     {
-        $buildings = [
-            [
-                'id' => 1,
-                'name' => 'ساختمان سپهر',
-                'type' => 'residential',
-                'province' => 'تهران',
-                'city' => 'تهران',
-                'blocks_count' => 4,
-                'units_count' => 48,
-                'construction_date' => '1398-03-15',
-                'status' => 'active'
-            ],
-            [
-                'id' => 2,
-                'name' => 'مجتمع تجاری پارسیان',
-                'type' => 'commercial',
-                'province' => 'تهران',
-                'city' => 'شهریار',
-                'blocks_count' => 2,
-                'units_count' => 32,
-                'construction_date' => '1400-06-20',
-                'status' => 'active'
-            ],
-            [
-                'id' => 3,
-                'name' => 'ساختمان اداری آفتاب',
-                'type' => 'office',
-                'province' => 'البرز',
-                'city' => 'کرج',
-                'blocks_count' => 1,
-                'units_count' => 15,
-                'construction_date' => '1399-11-10',
-                'status' => 'under_construction'
-            ],
-            [
-                'id' => 4,
-                'name' => 'مدرسه شهید بهشتی',
-                'type' => 'educational',
-                'province' => 'تهران',
-                'city' => 'اسلامشهر',
-                'blocks_count' => 3,
-                'units_count' => 24,
-                'construction_date' => '1395-01-01',
-                'status' => 'active'
-            ],
-            [
-                'id' => 5,
-                'name' => 'ساختمان مسکونی گلسار',
-                'type' => 'residential',
-                'province' => 'مازندران',
-                'city' => 'ساری',
-                'blocks_count' => 2,
-                'units_count' => 18,
-                'construction_date' => '1401-04-12',
-                'status' => 'inactive'
-            ],
-        ];
+        $this->auth->handle();
+
+        $search = trim((string) ($_GET['q'] ?? ''));
 
         return $this->view->render('buildings/index', [
-            'buildings' => $buildings,
+            'buildings' => $this->buildings->all($search),
+            'search' => $search,
+            'csrf_token' => Csrf::token(),
+            'error' => Session::get('building.error'),
         ]);
     }
 
     public function create(): string
     {
-        return $this->view->render('buildings/create');
-    }
+        $this->auth->handle();
 
-    public function store(): void
-    {
-        // TODO: Implement store logic
-        header('Location: /buildings');
-        exit;
-    }
-
-    public function show(int $id): string
-    {
-        $building = [
-            'id' => $id,
-            'name' => 'ساختمان سپهر',
-            'type' => 'residential',
-            'postal_code' => '1234567890',
-            'province' => 'تهران',
-            'city' => 'تهران',
-            'address' => 'تهران، خیابان ولیعصر، پلاک ۱۲۳',
-            'construction_date' => '1398-03-15',
-            'total_parking_count' => 50,
-            'total_storage_count' => 48,
-            'blocks_count' => 4,
-            'units_count' => 48,
-            'status' => 'active'
-        ];
-
-        return $this->view->render('buildings/show', [
-            'building' => $building,
+        return $this->view->render('buildings/form', [
+            'building' => null,
+            'action' => '/buildings/store',
+            'csrf_token' => Csrf::token(),
+            'error' => Session::get('building.error'),
         ]);
     }
 
-    public function edit(int $id): string
+    public function store(): string
     {
-        $building = [
-            'id' => $id,
-            'name' => 'ساختمان سپهر',
-            'type' => 'residential',
-            'postal_code' => '1234567890',
-            'province' => 'تهران',
-            'city' => 'تهران',
-            'address' => 'تهران، خیابان ولیعصر، پلاک ۱۲۳',
-            'construction_date' => '1398-03-15',
-            'total_parking_count' => 50,
-            'total_storage_count' => 48,
-            'status' => 'active'
-        ];
+        $this->auth->handle();
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            return $this->invalidRequest();
+        }
 
-        return $this->view->render('buildings/edit', [
+        $data = $this->validatedData();
+        if ($data['error'] !== null) {
+            Session::put('building.error', $data['error']);
+            header('Location: /buildings/create', true, 302);
+            return '';
+        }
+
+        $this->buildings->create($data['values']);
+        Session::forget('building.error');
+        header('Location: /buildings', true, 302);
+        return '';
+    }
+
+    public function edit(): string
+    {
+        $this->auth->handle();
+        $id = (int) ($_GET['id'] ?? 0);
+        $building = $id > 0 ? $this->buildings->find($id) : null;
+
+        if ($building === null) {
+            http_response_code(404);
+            return 'ساختمان پیدا نشد.';
+        }
+
+        return $this->view->render('buildings/form', [
             'building' => $building,
+            'action' => '/buildings/update?id=' . $id,
+            'csrf_token' => Csrf::token(),
+            'error' => Session::get('building.error'),
         ]);
     }
 
-    public function update(int $id): void
+    public function update(): string
     {
-        // TODO: Implement update logic
-        header('Location: /buildings/'.$id);
-        exit;
+        $this->auth->handle();
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            return $this->invalidRequest();
+        }
+
+        $id = (int) ($_GET['id'] ?? 0);
+        if ($id < 1 || $this->buildings->find($id) === null) {
+            http_response_code(404);
+            return 'ساختمان پیدا نشد.';
+        }
+
+        $data = $this->validatedData();
+        if ($data['error'] !== null) {
+            Session::put('building.error', $data['error']);
+            header('Location: /buildings/edit?id=' . $id, true, 302);
+            return '';
+        }
+
+        $this->buildings->update($id, $data['values']);
+        Session::forget('building.error');
+        header('Location: /buildings', true, 302);
+        return '';
     }
 
-    public function destroy(int $id): void
+    public function delete(): string
     {
-        // TODO: Implement delete logic
-        header('Location: /buildings');
-        exit;
+        $this->auth->handle();
+        if (!Csrf::validate($_POST['_token'] ?? null)) {
+            return $this->invalidRequest();
+        }
+
+        $id = (int) ($_POST['id'] ?? 0);
+        if ($id < 1) {
+            http_response_code(422);
+            return 'شناسه ساختمان نامعتبر است.';
+        }
+
+        try {
+            $this->buildings->delete($id);
+        } catch (Throwable) {
+            Session::put('building.error', 'ساختمان به دلیل داشتن اطلاعات وابسته قابل حذف نیست.');
+        }
+
+        header('Location: /buildings', true, 302);
+        return '';
+    }
+
+    private function validatedData(): array
+    {
+        $name = trim((string) ($_POST['name'] ?? ''));
+        if ($name === '' || mb_strlen($name) > 150) {
+            return ['values' => [], 'error' => 'نام ساختمان الزامی است و حداکثر ۱۵۰ کاراکتر دارد.'];
+        }
+
+        $parking = max(0, (int) ($_POST['parking_count'] ?? 0));
+        $storage = max(0, (int) ($_POST['storage_count'] ?? 0));
+        $date = trim((string) ($_POST['construction_date'] ?? ''));
+
+        return [
+            'values' => [
+                'name' => $name,
+                'postal_code' => trim((string) ($_POST['postal_code'] ?? '')) ?: null,
+                'building_type' => trim((string) ($_POST['building_type'] ?? '')) ?: null,
+                'construction_date' => $date !== '' ? $date : null,
+                'parking_count' => $parking,
+                'storage_count' => $storage,
+                'province' => trim((string) ($_POST['province'] ?? '')) ?: null,
+                'city' => trim((string) ($_POST['city'] ?? '')) ?: null,
+                'address' => trim((string) ($_POST['address'] ?? '')) ?: null,
+            ],
+            'error' => null,
+        ];
+    }
+
+    private function invalidRequest(): string
+    {
+        http_response_code(419);
+        return 'درخواست نامعتبر است.';
     }
 }
