@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Middleware\AuthMiddleware;
 use App\Services\AuthService;
+use App\Support\Csrf;
 use App\Support\View;
 
 final class DashboardController
@@ -22,7 +23,8 @@ final class DashboardController
         $this->middleware->handle();
 
         return $this->view->render('dashboard/index', [
-            'username' => $this->auth->userId(),
+            'username' => $this->auth->username(),
+            'csrf_token' => Csrf::token(),
         ]);
     }
 }
