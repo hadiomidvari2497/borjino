@@ -1,11 +1,54 @@
+# Dependencies
 /vendor/
+/node_modules/
+
+# Environment
 .env
 .env.*
 !.env.example
+
+# Storage
 /storage/logs/*
 /storage/uploads/*
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
 !/storage/logs/.gitkeep
 !/storage/uploads/.gitkeep
+!/storage/framework/.gitkeep
+
+# IDE
 .idea/
 .vscode/
+*.swp
+*.swo
+
+# OS
 .DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+/coverage/
+/build/
+phpunit.cache
+.phpunit.result.cache
+
+# Docker
+docker-compose.override.yml
+.docker/
+
+# Cache
+.php-cs-fixer.cache
+.phpstan.cache
+.psalm.cache
+
+# Misc
+*.bak
+*.tmp
+*.temp
