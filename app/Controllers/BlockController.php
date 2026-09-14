@@ -4,69 +4,142 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Middleware\AuthMiddleware;
+use App\Repositories\BlockRepository;
+use App\Repositories\BuildingRepository;
+use App\Support\Csrf;
+use App\Support\Session;
 use App\Support\View;
+use Throwable;
 
 final class BlockController
 {
-    public function __construct(private readonly View $view)
-    {
+    public function __construct(
+        private readonly View $view,
+        private readonly BlockRepository $blocks,
+        private readonly BuildingRepository $buildings,
+        private readonly AuthMiddleware $auth,
+    ) {
     }
 
     public function index(): string
     {
-        $blocks = [
-            ['id' => 1, 'building_id' => 1, 'building_name' => 'ساختمان سپهر', 'block_number' => 1, 'name' => 'بلوک الف', 'floor_count' => 8, 'units_count' => 16, 'created_at' => '1401-03-15'],
-            ['id' => 2, 'building_id' => 1, 'building_name' => 'ساختمان سپهر', 'block_number' => 2, 'name' => 'بلوک ب', 'floor_count' => 8, 'units_count' => 16, 'created_at' => '1401-03-15'],
-            ['id' => 3, 'building_id' => 1, 'building_name' => 'ساختمان سپهر', 'block_number' => 3, 'name' => 'بلوک ج', 'floor_count' => 6, 'units_count' => 12, 'created_at' => '1401-04-20'],
-            ['id' => 4, 'building_id' => 2, 'building_name' => 'مجتمع تجاری پارسیان', 'block_number' => 1, 'name' => 'بلوک تجاری ۱', 'floor_count' => 4, 'units_count' => 20, 'created_at' => '1402-01-10'],
-            ['id' => 5, 'building_id' => 2, 'building_name' => 'مجتمع تجاری پارسیان', 'block_number' => 2, 'name' => 'بلوک تجاری ۲', 'floor_count' => 4, 'units_count' => 12, 'created_at' => '1402-01-10'],
-        ];
-
+        $this->auth->handle();
+        $buildingId = isset($_GET['building_id']) ? (int) $_GET['building_id'] : null;
+        $search = trim((string) ($_GET['q'] ?? ''));
         return $this->view->render('blocks/index', [
-            'blocks' => $blocks,
+            'blocks' => $this->blocks->all($buildingId, $search),
+            'buildings' => $this->buildings->all(),
+            'building_id' => $buildingId,
+            'search' => $search,
+            'csrf_token' => Csrf::token(),
+            'error' => Session::get('block.error'),
         ]);
     }
 
     public function create(): string
     {
-        return $this->view->render('blocks/create');
-    }
-
-    public function store(): void
-    {
-        header('Location: /blocks');
-        exit;
-    }
-
-    public function show(int $id): string
-    {
-        return $this->view->render('blocks/show', ['block' => ['id' => $id, 'name' => 'بلوک الف']]);
-    }
-
-    public function edit(int $id): string
-    {
-        $block = [
-            'id' => $id,
-            'building_id' => 1,
-            'block_number' => 1,
-            'name' => 'بلوک الف',
-            'floor_count' => 8,
-        ];
-
-        return $this->view->render('blocks/create', [
-            'block' => $block,
+        $this->auth->handle();
+        return $this->view->render('blocks/form', [
+            'block' => null,
+            'buildings' => $this->buildings->all(),
+            'action' => '/blocks/store',
+            'csrf_token' => Csrf::token(),
+            'error' => Session::get('block.error'),
         ]);
     }
 
-    public function update(int $id): void
+    public function store(): string
     {
-        header('Location: /blocks');
-        exit;
+        $this->auth->handle();
+        if (!Csrf::validate($_POST['_token'] ?? null)) return $this->invalidRequest();
+        $data = $this->validatedData();
+        if ($data['error'] !== null) {
+            Session::put('block.error', $data['error']);
+            header('Location: /blocks/create', true, 302);
+            return '';
+        }
+        try {
+            $this->blocks->create($data['values']);
+            Session::forget('block.error');
+            header('Location: /blocks', true, 302);
+        } catch (Throwable) {
+            Session::put('block.error', 'شماره بلوک در این ساختمان قبلاً ثبت شده است.');
+            header('Location: /blocks/create', true, 302);
+        }
+        return '';
     }
 
-    public function destroy(int $id): void
+    public function edit(): string
     {
-        header('Location: /blocks');
-        exit;
+        $this->auth->handle();
+        $id = (int) ($_GET['id'] ?? 0);
+        $block = $id > 0 ? $this->blocks->find($id) : null;
+        if ($block === null) { http_response_code(404); return 'بلوک پیدا نشد.'; }
+        return $this->view->render('blocks/form', [
+            'block' => $block,
+            'buildings' => $this->buildings->all(),
+            'action' => '/blocks/update?id=' . $id,
+            'csrf_token' => Csrf::token(),
+            'error' => Session::get('block.error'),
+        ]);
+    }
+
+    public function update(): string
+    {
+        $this->auth->handle();
+        if (!Csrf::validate($_POST['_token'] ?? null)) return $this->invalidRequest();
+        $id = (int) ($_GET['id'] ?? 0);
+        if ($id < 1 || $this->blocks->find($id) === null) { http_response_code(404); return 'بلوک پیدا نشد.'; }
+        $data = $this->validatedData();
+        if ($data['error'] !== null) {
+            Session::put('block.error', $data['error']);
+            header('Location: /blocks/edit?id=' . $id, true, 302);
+            return '';
+        }
+        try {
+            $this->blocks->update($id, $data['values']);
+            Session::forget('block.error');
+            header('Location: /blocks', true, 302);
+        } catch (Throwable) {
+            Session::put('block.error', 'شماره بلوک در این ساختمان قبلاً ثبت شده است.');
+            header('Location: /blocks/edit?id=' . $id, true, 302);
+        }
+        return '';
+    }
+
+    public function delete(): string
+    {
+        $this->auth->handle();
+        if (!Csrf::validate($_POST['_token'] ?? null)) return $this->invalidRequest();
+        $id = (int) ($_POST['id'] ?? 0);
+        if ($id < 1) { http_response_code(422); return 'شناسه بلوک نامعتبر است.'; }
+        try {
+            $this->blocks->delete($id);
+            Session::forget('block.error');
+        } catch (Throwable) {
+            Session::put('block.error', 'بلوک به دلیل داشتن واحدهای وابسته قابل حذف نیست.');
+        }
+        header('Location: /blocks', true, 302);
+        return '';
+    }
+
+    private function validatedData(): array
+    {
+        $buildingId = (int) ($_POST['building_id'] ?? 0);
+        $number = (int) ($_POST['block_number'] ?? 0);
+        $name = trim((string) ($_POST['name'] ?? ''));
+        $floors = (int) ($_POST['floor_count'] ?? 0);
+        if ($buildingId < 1 || $this->buildings->find($buildingId) === null) return ['values' => [], 'error' => 'ساختمان انتخاب‌شده معتبر نیست.'];
+        if ($number < 1) return ['values' => [], 'error' => 'شماره بلوک باید حداقل ۱ باشد.'];
+        if ($floors < 1) return ['values' => [], 'error' => 'تعداد طبقات باید حداقل ۱ باشد.'];
+        if (mb_strlen($name) > 150) return ['values' => [], 'error' => 'نام بلوک حداکثر ۱۵۰ کاراکتر دارد.'];
+        return ['values' => ['building_id' => $buildingId, 'block_number' => $number, 'name' => $name !== '' ? $name : null, 'floor_count' => $floors], 'error' => null];
+    }
+
+    private function invalidRequest(): string
+    {
+        http_response_code(419);
+        return 'درخواست نامعتبر است.';
     }
 }
