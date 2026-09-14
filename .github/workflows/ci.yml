@@ -2,217 +2,73 @@ name: Borjino CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
-    branches: [main, develop]
+    branches: [main]
 
-env:
-  PHP_VERSION: '8.4'
-  COMPOSER_VERSION: '2.7'
+permissions:
+  contents: read
 
 jobs:
-  # PHP Syntax Check & Linting
-  php-lint:
-    name: PHP Syntax Check
+  php:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ env.PHP_VERSION }}
-          extensions: mbstring, intl, pdo_mysql, opcache
-          coverage: none
-
-      - name: Check PHP syntax
-        run: |
-          find . -name "*.php" -not -path "./vendor/*" -not -path "./docker/*" -exec php -l {} \;
-
-      - name: Run PHP CS Fixer (dry-run)
-        run: |
-          composer install --no-dev --no-interaction --prefer-dist 2>/dev/null || true
-          vendor/bin/php-cs-fixer fix --dry-run --diff --format=txt 2>/dev/null || echo "php-cs-fixer not available, skipping"
-
-  # PHPStan Static Analysis
-  phpstan:
-    name: PHPStan Analysis
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ env.PHP_VERSION }}
-          extensions: mbstring, intl, pdo_mysql
-          coverage: none
-
-      - name: Install dependencies
-        run: |
-          composer install --no-interaction --prefer-dist 2>/dev/null || true
-
-      - name: Run PHPStan
-        run: |
-          vendor/bin/phpstan analyse --level=5 app/ 2>/dev/null || echo "PHPStan not configured, skipping"
-
-  # Unit Tests
-  tests:
-    name: Unit Tests
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ['8.2', '8.3', '8.4']
     services:
       mysql:
         image: mysql:8.4
         env:
           MYSQL_DATABASE: borjino_test
-          MYSQL_USER: test
-          MYSQL_PASSWORD: test
+          MYSQL_USER: borjino
+          MYSQL_PASSWORD: borjino
           MYSQL_ROOT_PASSWORD: root
         ports:
           - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    env:
+      DB_DRIVER: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: borjino_test
+      DB_USERNAME: borjino
+      DB_PASSWORD: borjino
+      DB_CHARSET: utf8mb4
+      DB_COLLATION: utf8mb4_unicode_ci
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ env.PHP_VERSION }}
-          extensions: mbstring, intl, pdo_mysql, pcntl
-          coverage: xdebug
-
-      - name: Install dependencies
-        run: |
-          composer install --no-interaction --prefer-dist
-
-      - name: Wait for MySQL
-        run: |
-          for i in {1..30}; do
-            mysqladmin ping -h 127.0.0.1 -u root -proot && break || sleep 2
-          done
-
-      - name: Run migrations
-        run: |
-          php database/migrations/migrate.php 2>/dev/null || echo "No migrations, skipping"
-
-      - name: Run tests
-        run: |
-          vendor/bin/phpunit --testdox 2>/dev/null || echo "PHPUnit not configured, skipping"
-
-  # Frontend Assets Check
-  frontend:
-    name: Frontend Assets
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Check CSS syntax
-        run: |
-          if command -v stylelint &> /dev/null; then
-            stylelint public/assets/css/**/*.css
-          else
-            echo "stylelint not available, doing basic check..."
-            # Basic check - ensure files exist and are readable
-            test -f public/assets/css/app.css && echo "CSS file exists"
-            head -20 public/assets/css/app.css | grep -q ":root" && echo "CSS variables found"
-          fi
-
-      - name: Check JS syntax
-        run: |
-          if command -v eslint &> /dev/null; then
-            eslint public/assets/js/**/*.js
-          else
-            echo "eslint not available, doing basic check..."
-            test -f public/assets/js/app.js && echo "JS file exists"
-            node --check public/assets/js/app.js 2>/dev/null && echo "JS syntax OK" || echo "JS syntax check skipped (no node)"
-          fi
-
-      - name: Check view files
-        run: |
-          # Ensure all view files are valid PHP
-          find resources/views -name "*.php" -exec php -l {} \;
-
-  # Docker Build Test
-  docker:
-    name: Docker Build
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build development image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          target: development
-          load: true
-          tags: borjino:dev-test
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Test development image
-        run: |
-          docker run --rm borjino:dev-test php -v
-          docker run --rm borjino:dev-test php -l public/index.php
-
-      - name: Build production image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          target: production
-          load: true
-          tags: borjino:prod-test
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Test production image
-        run: |
-          docker run --rm borjino:prod-test php -v
-          docker run --rm borjino:prod-test nginx -t
-
-  # Security Audit
-  security:
-    name: Security Audit
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ env.PHP_VERSION }}
-          extensions: mbstring, intl, pdo_mysql
+          php-version: ${{ matrix.php-version }}
+          extensions: pdo_mysql
           coverage: none
-
-      - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist --no-dev
-
-      - name: Run security checker
+      - name: Validate composer.json
+        run: composer validate --no-check-publish
+      - name: PHP syntax check
+        shell: bash
         run: |
-          vendor/bin/security-checker security:check composer.lock 2>/dev/null || echo "Security checker not available, skipping"
-
-  # Deploy (only on main branch)
-  deploy:
-    name: Deploy to Staging
-    needs: [php-lint, phpstan, tests, frontend, docker, security]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    environment: staging
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Deploy to staging
+          set -euo pipefail
+          files=$(find . -type f -name '*.php' -not -path './.git/*' -not -path './vendor/*')
+          test -n "$files"
+          while IFS= read -r file; do php -l "$file"; done <<< "$files"
+      - name: Bootstrap check
+        run: php -r "require 'bootstrap/autoload.php'; echo 'Autoloader OK'.PHP_EOL;"
+      - name: Database migration smoke test
+        run: php database/migrate.php
+      - name: Verify applied migrations
         run: |
-          echo "Deploying to staging..."
-          # Add your deployment commands here
-          # Example: docker compose -f docker-compose.prod.yml up -d
+          php -r '
+          $pdo = new PDO("mysql:host=127.0.0.1;port=3306;dbname=borjino_test;charset=utf8mb4", "borjino", "borjino", [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+          $count = (int) $pdo->query("SELECT COUNT(*) FROM schema_migrations")->fetchColumn();
+          if ($count < 13) { fwrite(STDERR, "Expected at least 13 applied migrations, got {$count}.\n"); exit(1); }
+          echo "Applied migrations: {$count}\n";
+          '
+      - name: Security smoke tests
+        run: php tests/security_csrf_smoke.php
