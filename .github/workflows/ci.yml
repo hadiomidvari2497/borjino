@@ -16,7 +16,6 @@ jobs:
       fail-fast: false
       matrix:
         php-version: ['8.2', '8.3', '8.4']
-
     services:
       mysql:
         image: mysql:8.4
@@ -32,7 +31,6 @@ jobs:
           --health-interval=5s
           --health-timeout=5s
           --health-retries=20
-
     env:
       DB_DRIVER: mysql
       DB_HOST: 127.0.0.1
@@ -42,39 +40,28 @@ jobs:
       DB_PASSWORD: borjino
       DB_CHARSET: utf8mb4
       DB_COLLATION: utf8mb4_unicode_ci
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-version }}
           extensions: pdo_mysql
           coverage: none
-
       - name: Validate composer.json
         run: composer validate --no-check-publish
-
       - name: PHP syntax check
         shell: bash
         run: |
           set -euo pipefail
-          files=$(find . -type f -name '*.php' \
-            -not -path './.git/*' \
-            -not -path './vendor/*')
+          files=$(find . -type f -name '*.php' -not -path './.git/*' -not -path './vendor/*')
           test -n "$files"
-          while IFS= read -r file; do
-            php -l "$file"
-          done <<< "$files"
-
+          while IFS= read -r file; do php -l "$file"; done <<< "$files"
       - name: Bootstrap check
         run: php -r "require 'bootstrap/autoload.php'; echo 'Autoloader OK'.PHP_EOL;"
-
       - name: Database migration smoke test
         run: php database/migrate.php
-
       - name: Verify applied migrations
         run: |
           php -r '
@@ -83,3 +70,5 @@ jobs:
           if ($count < 13) { fwrite(STDERR, "Expected at least 13 applied migrations, got {$count}.\n"); exit(1); }
           echo "Applied migrations: {$count}\n";
           '
+      - name: Security smoke tests
+        run: php tests/security_csrf_smoke.php
