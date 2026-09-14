@@ -10,6 +10,7 @@
         <h1>داشبورد برجینو</h1>
         <p>کاربر واردشده: <?= htmlspecialchars((string) $username, ENT_QUOTES, 'UTF-8') ?></p>
         <form method="post" action="/logout">
+            <input type="hidden" name="_token" value="<?= htmlspecialchars((string) $csrf_token, ENT_QUOTES, 'UTF-8') ?>">
             <button type="submit">خروج</button>
         </form>
     </main>
