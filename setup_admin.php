@@ -1,0 +1,5 @@
+<?php
+require_once __DIR__.'/config.php';
+$message='';
+if($_SERVER['REQUEST_METHOD']==='POST'){check_csrf();$u=trim(post('username'));$p=post('password');$n=trim(post('full_name'));if($u && $p){$st=$pdo->prepare('INSERT INTO users(username,password,full_name) VALUES(?,?,?)');$st->execute([$u,password_hash($p,PASSWORD_DEFAULT),$n]);$message='کاربر مدیر ساخته شد. حالا از login.php وارد شو.';}}
+?><!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ساخت مدیر</title><link rel="stylesheet" href="assets/style.css"></head><body><div class="login"><h1>ساخت کاربر مدیر</h1><?php if($message):?><div class="flash"><?=e($message)?></div><?php endif;?><form method="post"><?=csrf_field()?><label>نام کاربری<input name="username" value="admin" required></label><label>نام نمایشی<input name="full_name" value="مدیر سیستم"></label><label>رمز عبور<input type="password" name="password" required minlength="6"></label><button>ساخت کاربر</button></form><p class="muted">بعد از ساخت، فایل setup_admin.php را حذف کن.</p></div></body></html>
