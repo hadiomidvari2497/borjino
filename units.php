@@ -1,7 +1,127 @@
 <?php
-require_once __DIR__.'/config.php'; require_login();
-if(isset($_GET['delete'])){$pdo->prepare('DELETE FROM units WHERE id=?')->execute([(int)$_GET['delete']]);flash('واحد حذف شد.');redirect('units.php');}
-if($_SERVER['REQUEST_METHOD']==='POST'){check_csrf();$id=(int)post('id');$data=[(int)post('building_id'),(int)post('block_id'),trim(post('unit_no')), (int)post('floor_no',0),(float)post('area',0),(int)post('bedrooms',0),trim(post('parking_no'))?:null,trim(post('storage_no'))?:null,post('status','vacant')];if($id){$data[]=$id;$pdo->prepare('UPDATE units SET building_id=?,block_id=?,unit_no=?,floor_no=?,area=?,bedrooms=?,parking_no=?,storage_no=?,status=? WHERE id=?')->execute($data);flash('واحد ویرایش شد.');}else{$pdo->prepare('INSERT INTO units(building_id,block_id,unit_no,floor_no,area,bedrooms,parking_no,storage_no,status) VALUES(?,?,?,?,?,?,?,?,?)')->execute($data);flash('واحد اضافه شد.');}redirect('units.php');}
-if(isset($_GET['generate'])){ $b=(int)$_GET['generate'];$st=$pdo->prepare('SELECT * FROM blocks WHERE id=?');$st->execute([$b]);$block=$st->fetch();if($block){for($f=1;$f<=$block['floor_count'];$f++){for($n=1;$n<=$block['units_per_floor'];$n++){$no=$f*100+$n;$x=$pdo->prepare('SELECT id FROM units WHERE block_id=? AND unit_no=?');$x->execute([$b,$no]);if(!$x->fetch())$pdo->prepare('INSERT INTO units(building_id,block_id,unit_no,floor_no,status) VALUES(?,?,?,?,?)')->execute([$block['building_id'],$b,$no,$f,'vacant']);}}flash('واحدها به صورت خودکار ساخته شدند.');}redirect('units.php');}
-$edit=null;if(isset($_GET['edit'])){$st=$pdo->prepare('SELECT * FROM units WHERE id=?');$st->execute([(int)$_GET['edit']]);$edit=$st->fetch();}$buildings=$pdo->query('SELECT id,name FROM buildings ORDER BY name')->fetchAll();$blocks=$pdo->query('SELECT b.*,g.name building_name FROM blocks b JOIN buildings g ON g.id=b.building_id ORDER BY g.name,b.name')->fetchAll();$rows=$pdo->query('SELECT u.*,g.name building_name,b.name block_name FROM units u JOIN buildings g ON g.id=u.building_id JOIN blocks b ON b.id=u.block_id ORDER BY g.name,b.name,u.floor_no,u.unit_no')->fetchAll();page_header('واحدها');
-?><div class="toolbar"><h1>واحدها</h1><a class="button" href="units.php?new=1">+ واحد جدید</a></div><?php if(isset($_GET['new'])||$edit):?><form class="form" method="post"><?=csrf_field()?><?php if($edit):?><input type="hidden" name="id" value="<?=$edit['id']?>"><?php endif;?><div class="grid"><label>ساختمان<select name="building_id" required><?php foreach($buildings as $b):?><option value="<?=$b['id']?>" <?=($edit['building_id']??'')==$b['id']?'selected':''?>><?=e($b['name'])?></option><?php endforeach;?></select></label><label>بلوک<select name="block_id" required><?php foreach($blocks as $b):?><option value="<?=$b['id']?>" <?=($edit['block_id']??'')==$b['id']?'selected':''?>><?=e($b['building_name'].' / '.$b['name'])?></option><?php endforeach;?></select></label><label>شماره واحد<input name="unit_no" required value="<?=e($edit['unit_no']??'')?>"></label><label>طبقه<input type="number" name="floor_no" value="<?=$edit['floor_no']??0?>"></label><label>متراژ<input type="number" step="0.01" name="area" value="<?=$edit['area']??0?>"></label><label>تعداد خواب<input type="number" name="bedrooms" value="<?=$edit['bedrooms']??0?>"></label><label>پارکینگ<input name="parking_no" value="<?=e($edit['parking_no']??'')?>"></label><label>انباری<input name="storage_no" value="<?=e($edit['storage_no']??'')?>"></label><label>وضعیت<select name="status"><option value="vacant">خالی</option><option value="occupied">ساکن</option><option value="rented">اجاره</option><option value="sold">فروخته‌شده</option><option value="inactive">غیرفعال</option></select></label></div><div class="actions"><button>ذخیره</button><a class="button" href="units.php">انصراف</a></div></form><hr><?php endif;?><div class="table-wrap"><table class="table"><tr><th>ساختمان</th><th>بلوک</th><th>واحد</th><th>طبقه</th><th>متراژ</th><th>وضعیت</th><th>عملیات</th></tr><?php foreach($rows as $r):?><tr><td><?=e($r['building_name'])?></td><td><?=e($r['block_name'])?></td><td><?=e($r['unit_no'])?></td><td><?=$r['floor_no']?></td><td><?=$r['area']?></td><td><?=e($r['status'])?></td><td><a class="button" href="units.php?edit=<?=$r['id']?>">ویرایش</a> <a class="button danger" onclick="return confirm('حذف شود؟')" href="units.php?delete=<?=$r['id']?>">حذف</a></td></tr><?php endforeach;?></table></div><?php page_footer();?>
+require_once __DIR__.'/config.php';
+require_login();
+
+function unit_status_label($v){return ['vacant'=>'خالی','repair'=>'در حال تعمیر','occupied'=>'ساکن','rented'=>'اجاره داده شده','sold'=>'فروخته شده'][$v]??$v;}
+function financial_label($v){return ['debtor'=>'بدهکار','creditor'=>'بستانکار','settled'=>'تسویه'][ $v]??$v;}
+function direction_label($v){return ['north'=>'شمالی','south'=>'جنوبی','east'=>'شرقی','west'=>'غربی'][$v]??'';}
+
+if(isset($_GET['delete'])){
+    $id=(int)$_GET['delete'];
+    $st=$pdo->prepare('SELECT COUNT(*) FROM memberships WHERE unit_id=?'); $st->execute([$id]);
+    if((int)$st->fetchColumn()>0){flash('این واحد ساکن/عضو متصل دارد و قابل حذف نیست.');redirect('units.php');}
+    $pdo->prepare('DELETE FROM units WHERE id=?')->execute([$id]); flash('واحد حذف شد.'); redirect('units.php');
+}
+
+if($_SERVER['REQUEST_METHOD']==='POST'){
+    check_csrf();
+    $action=post('action');
+    $building_id=(int)post('building_id'); $block_id=(int)post('block_id');
+    $st=$pdo->prepare('SELECT * FROM blocks WHERE id=? AND building_id=?'); $st->execute([$block_id,$building_id]); $block=$st->fetch();
+    if(!$block){flash('ساختمان و بلوک انتخاب‌شده معتبر نیست.');redirect('units.php');}
+
+    $insert=function($floor,$no,$area,$parking_count,$parking_numbers,$storage_count,$storage_numbers,$status,$financial,$direction,$notes) use($pdo,$building_id,$block_id){
+        $q=$pdo->prepare('INSERT INTO units(building_id,block_id,unit_no,floor_no,area,parking_count,parking_numbers,storage_count,storage_numbers,status,financial_status,direction,notes) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)');
+        $q->execute([$building_id,$block_id,(string)$no,$floor,$area,$parking_count,$parking_numbers,$storage_count,$storage_numbers,$status,$financial,$direction,$notes]);
+    };
+
+    try{
+        if($action==='block_group'){
+            $floor_start=max(1,(int)post('floor_start',1)); $floor_end=max($floor_start,(int)post('floor_end',$floor_start));
+            if($floor_end>(int)$block['floor_count']) throw new Exception('طبقه انتخابی بیشتر از تعداد طبقات بلوک است.');
+            $per_floor=max(1,(int)post('units_per_floor',1)); $next=max(0,(int)post('number_start',1));
+            for($f=$floor_start;$f<=$floor_end;$f++) for($n=0;$n<$per_floor;$n++){$insert($f,$next++, (float)post('area',0),(int)post('parking_count',0),trim(post('parking_numbers'))?:null,(int)post('storage_count',0),trim(post('storage_numbers'))?:null,post('status','vacant'),post('financial_status','settled'),post('direction')?:null,trim(post('notes'))?:null);}
+            flash('واحدهای بلوک به‌صورت گروهی ساخته شدند.');
+        }elseif($action==='floor_group'){
+            $floor=max(1,(int)post('floor_no',1)); if($floor>(int)$block['floor_count']) throw new Exception('طبقه انتخابی بیشتر از تعداد طبقات بلوک است.');
+            $count=max(1,(int)post('unit_count',1)); $next=max(0,(int)post('number_start',1));
+            for($n=0;$n<$count;$n++){$insert($floor,$next++, (float)post('area',0),(int)post('parking_count',0),trim(post('parking_numbers'))?:null,(int)post('storage_count',0),trim(post('storage_numbers'))?:null,post('status','vacant'),post('financial_status','settled'),post('direction')?:null,trim(post('notes'))?:null);}
+            flash('واحدهای طبقه به‌صورت گروهی ساخته شدند.');
+        }elseif($action==='single'){
+            $id=(int)post('id'); $unit_no=trim(post('unit_no')); $floor=max(0,(int)post('floor_no'));
+            if($id){
+                $q=$pdo->prepare('UPDATE units SET building_id=?,block_id=?,unit_no=?,floor_no=?,area=?,parking_count=?,parking_numbers=?,storage_count=?,storage_numbers=?,status=?,financial_status=?,direction=?,notes=? WHERE id=?');
+                $q->execute([$building_id,$block_id,$unit_no,$floor,(float)post('area',0),(int)post('parking_count',0),trim(post('parking_numbers'))?:null,(int)post('storage_count',0),trim(post('storage_numbers'))?:null,post('status','vacant'),post('financial_status','settled'),post('direction')?:null,trim(post('notes'))?:null,$id]); flash('واحد ویرایش شد.');
+            }else{
+                $insert($floor,$unit_no,(float)post('area',0),(int)post('parking_count',0),trim(post('parking_numbers'))?:null,(int)post('storage_count',0),trim(post('storage_numbers'))?:null,post('status','vacant'),post('financial_status','settled'),post('direction')?:null,trim(post('notes'))?:null); flash('واحد اضافه شد.');
+            }
+        }
+    }catch(Throwable $e){flash('خطا در ساخت واحد: '.($e->getCode()===23000?'شماره واحد تکراری است.':$e->getMessage()));}
+    redirect('units.php');
+}
+
+$edit=null;if(isset($_GET['edit'])){$st=$pdo->prepare('SELECT * FROM units WHERE id=?');$st->execute([(int)$_GET['edit']]);$edit=$st->fetch();}
+$buildings=$pdo->query('SELECT id,name FROM buildings ORDER BY name')->fetchAll();
+$blocks=$pdo->query('SELECT b.*,g.name building_name FROM blocks b JOIN buildings g ON g.id=b.building_id ORDER BY g.name,b.name')->fetchAll();
+$rows=$pdo->query('SELECT u.*,g.name building_name,b.name block_name FROM units u JOIN buildings g ON g.id=u.building_id JOIN blocks b ON b.id=u.block_id ORDER BY g.name,b.name,u.floor_no,CAST(u.unit_no AS UNSIGNED),u.unit_no')->fetchAll();
+page_header('واحدها');
+?>
+<div class="content-header mb-4"><div><h4 class="mb-1">مدیریت واحدها</h4><p class="text-muted mb-0">سه روش کامل برای ایجاد واحد در سطح بلوک، طبقه و تکی.</p></div></div>
+
+<div class="card mb-4"><div class="card-body">
+<ul class="nav nav-tabs mb-4" role="tablist">
+<li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#blockGroup">۱. گروهی در سطح بلوک</a></li>
+<li class="nav-item"><a class="nav-link" data-toggle="tab" href="#floorGroup">۲. گروهی در سطح طبقه</a></li>
+<li class="nav-item"><a class="nav-link" data-toggle="tab" href="#single">۳. ایجاد تکی</a></li>
+</ul>
+<div class="tab-content">
+<div class="tab-pane fade show active" id="blockGroup"><form method="post"><input type="hidden" name="action" value="block_group"><?=csrf_field()?>
+<div class="row">
+<div class="col-md-3 form-group"><label>ساختمان</label><select class="form-control js-building" name="building_id" required><?php foreach($buildings as $b):?><option value="<?=$b['id']?>"><?=e($b['name'])?></option><?php endforeach;?></select></div>
+<div class="col-md-3 form-group"><label>بلوک</label><select class="form-control" name="block_id" required><?php foreach($blocks as $b):?><option data-building="<?=$b['building_id']?>" value="<?=$b['id']?>"><?=e($b['building_name'].' / '.$b['name'])?> (<?=$b['floor_count']?> طبقه)</option><?php endforeach;?></select></div>
+<div class="col-md-3 form-group"><label>از طبقه</label><input class="form-control" type="number" min="1" name="floor_start" value="1" required></div>
+<div class="col-md-3 form-group"><label>تا طبقه</label><input class="form-control" type="number" min="1" name="floor_end" value="1" required></div>
+<div class="col-md-3 form-group"><label>تعداد واحد در هر طبقه</label><input class="form-control" type="number" min="1" name="units_per_floor" value="1" required></div>
+<div class="col-md-3 form-group"><label>پیششماره / شماره شروع</label><input class="form-control" type="number" min="0" name="number_start" value="1" required></div>
+<?php else: ?><?php endif; ?>
+<div class="col-md-3 form-group"><label>متراژ پیشفرض</label><input class="form-control" type="number" step="0.01" name="area" value="0"></div>
+<div class="col-md-3 form-group"><label>تعداد پارکینگ پیشفرض</label><input class="form-control" type="number" min="0" name="parking_count" value="0"></div>
+<div class="col-md-3 form-group"><label>شماره پارکینگ‌ها</label><input class="form-control" name="parking_numbers" placeholder="مثلاً ۱،۲"></div>
+<div class="col-md-3 form-group"><label>تعداد انبار پیشفرض</label><input class="form-control" type="number" min="0" name="storage_count" value="0"></div>
+<div class="col-md-3 form-group"><label>شماره انبارها</label><input class="form-control" name="storage_numbers" placeholder="مثلاً ۱۰،۱۱"></div>
+<div class="col-md-3 form-group"><label>وضعیت اولیه</label><select class="form-control" name="status"><option value="vacant">خالی</option><option value="repair">در حال تعمیر</option><option value="occupied">ساکن</option><option value="rented">اجاره داده شده</option><option value="sold">فروخته شده</option></select></div>
+<div class="col-md-3 form-group"><label>جهت</label><select class="form-control" name="direction"><option value="">بدون تعیین</option><option value="north">شمالی</option><option value="south">جنوبی</option><option value="east">شرقی</option><option value="west">غربی</option></select></div>
+<div class="col-md-3 form-group"><label>وضعیت مالی</label><select class="form-control" name="financial_status"><option value="settled">تسویه</option><option value="debtor">بدهکار</option><option value="creditor">بستانکار</option></select></div>
+<div class="col-md-12 form-group"><label>توضیحات مشترک</label><textarea class="form-control" name="notes" rows="2"></textarea></div>
+</div><button class="btn btn-primary">ساخت واحدها</button></form></div>
+
+<div class="tab-pane fade" id="floorGroup"><form method="post"><input type="hidden" name="action" value="floor_group"><?=csrf_field()?>
+<div class="row">
+<div class="col-md-3 form-group"><label>ساختمان</label><select class="form-control" name="building_id" required><?php foreach($buildings as $b):?><option value="<?=$b['id']?>"><?=e($b['name'])?></option><?php endforeach;?></select></div>
+<div class="col-md-3 form-group"><label>بلوک</label><select class="form-control" name="block_id" required><?php foreach($blocks as $b):?><option value="<?=$b['id']?>"><?=e($b['building_name'].' / '.$b['name'])?> (<?=$b['floor_count']?> طبقه)</option><?php endforeach;?></select></div>
+<div class="col-md-3 form-group"><label>طبقه</label><input class="form-control" type="number" min="1" name="floor_no" value="1" required></div>
+<div class="col-md-3 form-group"><label>تعداد واحد در این طبقه</label><input class="form-control" type="number" min="1" name="unit_count" value="1" required></div>
+<div class="col-md-3 form-group"><label>پیششماره / شماره شروع</label><input class="form-control" type="number" min="0" name="number_start" value="1" required></div>
+<div class="col-md-3 form-group"><label>متراژ پیشفرض</label><input class="form-control" type="number" step="0.01" name="area" value="0"></div>
+<div class="col-md-3 form-group"><label>تعداد پارکینگ</label><input class="form-control" type="number" min="0" name="parking_count" value="0"></div>
+<div class="col-md-3 form-group"><label>شماره پارکینگ‌ها</label><input class="form-control" name="parking_numbers"></div>
+<div class="col-md-3 form-group"><label>تعداد انبار</label><input class="form-control" type="number" min="0" name="storage_count" value="0"></div>
+<div class="col-md-3 form-group"><label>شماره انبارها</label><input class="form-control" name="storage_numbers"></div>
+<div class="col-md-3 form-group"><label>وضعیت اولیه</label><select class="form-control" name="status"><option value="vacant">خالی</option><option value="repair">در حال تعمیر</option><option value="occupied">ساکن</option><option value="rented">اجاره داده شده</option><option value="sold">فروخته شده</option></select></div>
+<div class="col-md-3 form-group"><label>جهت</label><select class="form-control" name="direction"><option value="">بدون تعیین</option><option value="north">شمالی</option><option value="south">جنوبی</option><option value="east">شرقی</option><option value="west">غربی</option></select></div>
+<div class="col-md-3 form-group"><label>وضعیت مالی</label><select class="form-control" name="financial_status"><option value="settled">تسویه</option><option value="debtor">بدهکار</option><option value="creditor">بستانکار</option></select></div>
+<div class="col-md-12 form-group"><label>توضیحات مشترک</label><textarea class="form-control" name="notes" rows="2"></textarea></div>
+</div><button class="btn btn-primary">ساخت واحدهای این طبقه</button></form></div>
+
+<div class="tab-pane fade" id="single"><form method="post"><input type="hidden" name="action" value="single"><?=csrf_field()?><?php if($edit):?><input type="hidden" name="id" value="<?=$edit['id']?>"><?php endif;?>
+<div class="row">
+<div class="col-md-3 form-group"><label>ساختمان</label><select class="form-control" name="building_id" required><?php foreach($buildings as $b):?><option value="<?=$b['id']?>" <?=($edit['building_id']??'')==$b['id']?'selected':''?>><?=e($b['name'])?></option><?php endforeach;?></select></div>
+<div class="col-md-3 form-group"><label>بلوک</label><select class="form-control" name="block_id" required><?php foreach($blocks as $b):?><option value="<?=$b['id']?>" <?=($edit['block_id']??'')==$b['id']?'selected':''?>><?=e($b['building_name'].' / '.$b['name'])?></option><?php endforeach;?></select></div>
+<div class="col-md-3 form-group"><label>شماره واحد</label><input class="form-control" name="unit_no" required value="<?=e($edit['unit_no']??'')?>"></div>
+<div class="col-md-3 form-group"><label>طبقه</label><input class="form-control" type="number" name="floor_no" value="<?=$edit['floor_no']??0?>"></div>
+<div class="col-md-3 form-group"><label>کد پستی</label><input class="form-control" name="unit_postal_code" value="<?=e($edit['unit_postal_code']??'')?>" placeholder="در نسخه بعدی قابل ذخیره‌سازی است"></div>
+<div class="col-md-3 form-group"><label>متراژ</label><input class="form-control" type="number" step="0.01" name="area" value="<?=$edit['area']??0?>"></div>
+<div class="col-md-3 form-group"><label>تعداد پارکینگ</label><input class="form-control" type="number" min="0" name="parking_count" value="<?=$edit['parking_count']??0?>"></div>
+<div class="col-md-3 form-group"><label>شماره پارکینگ‌ها</label><input class="form-control" name="parking_numbers" value="<?=e($edit['parking_numbers']??'')?>"></div>
+<div class="col-md-3 form-group"><label>تعداد انبار</label><input class="form-control" type="number" min="0" name="storage_count" value="<?=$edit['storage_count']??0?>"></div>
+<div class="col-md-3 form-group"><label>شماره انبارها</label><input class="form-control" name="storage_numbers" value="<?=e($edit['storage_numbers']??'')?>"></div>
+<div class="col-md-3 form-group"><label>وضعیت واحد</label><select class="form-control" name="status"><?php foreach(['vacant'=>'خالی','repair'=>'در حال تعمیر','occupied'=>'ساکن','rented'=>'اجاره داده شده','sold'=>'فروخته شده'] as $k=>$v):?><option value="<?=$k?>" <?=($edit['status']??'vacant')===$k?'selected':''?>><?=$v?></option><?php endforeach;?></select></div>
+<div class="col-md-3 form-group"><label>وضعیت مالی</label><select class="form-control" name="financial_status"><?php foreach(['settled'=>'تسویه','debtor'=>'بدهکار','creditor'=>'بستانکار'] as $k=>$v):?><option value="<?=$k?>" <?=($edit['financial_status']??'settled')===$k?'selected':''?>><?=$v?></option><?php endforeach;?></select></div>
+<div class="col-md-3 form-group"><label>جهت</label><select class="form-control" name="direction"><option value="">بدون تعیین</option><?php foreach(['north'=>'شمالی','south'=>'جنوبی','east'=>'شرقی','west'=>'غربی'] as $k=>$v):?><option value="<?=$k?>" <?=($edit['direction']??'')===$k?'selected':''?>><?=$v?></option><?php endforeach;?></select></div>
+<div class="col-md-12 form-group"><label>توضیحات</label><textarea class="form-control" name="notes" rows="3"><?=e($edit['notes']??'')?></textarea></div>
+</div><button class="btn btn-primary">ذخیره واحد</button> <a class="btn btn-outline-secondary" href="units.php">انصراف</a></form></div>
+</div></div></div>
+
+<div class="card"><div class="card-body"><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>ساختمان</th><th>بلوک</th><th>واحد</th><th>طبقه</th><th>متراژ</th><th>وضعیت</th><th>مالی</th><th>عملیات</th></tr></thead><tbody>
+<?php foreach($rows as $r):?><tr><td><?=e($r['building_name'])?></td><td><?=e($r['block_name'])?></td><td><strong><?=e($r['unit_no'])?></strong></td><td><?=$r['floor_no']?></td><td><?=$r['area']?></td><td><?=e(unit_status_label($r['status']))?></td><td><?=e(financial_label($r['financial_status']))?></td><td><a class="btn btn-sm btn-outline-primary" href="units.php?edit=<?=$r['id']?>#single">ویرایش</a> <a class="btn btn-sm btn-outline-danger" onclick="return confirm('حذف شود؟')" href="units.php?delete=<?=$r['id']?>">حذف</a></td></tr><?php endforeach; ?></tbody></table></div></div></div>
+<?php page_footer(); ?>
