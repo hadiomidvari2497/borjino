@@ -8,10 +8,10 @@ ALTER TABLE buildings
   ADD COLUMN province VARCHAR(100) DEFAULT NULL AFTER storage_count,
   ADD COLUMN city VARCHAR(100) DEFAULT NULL AFTER province;
 
-ALTER TABLE blocks
-  ADD COLUMN block_no VARCHAR(50) NOT NULL DEFAULT '' AFTER building_id;
+ALTER TABLE blocks ADD COLUMN block_no VARCHAR(50) NOT NULL DEFAULT '' AFTER building_id;
 
 ALTER TABLE units
+  ADD COLUMN unit_postal_code VARCHAR(20) DEFAULT NULL AFTER unit_no,
   ADD COLUMN parking_count INT NOT NULL DEFAULT 0 AFTER area,
   ADD COLUMN parking_numbers VARCHAR(500) DEFAULT NULL AFTER parking_count,
   ADD COLUMN storage_count INT NOT NULL DEFAULT 0 AFTER parking_no,
