@@ -6,7 +6,7 @@
     <h1>واحدها</h1>
     <?php if ($error): ?><p role="alert"><?= htmlspecialchars((string)$error, ENT_QUOTES, 'UTF-8') ?></p><?php endif; ?>
     <?php if ($success = \App\Support\Session::get('unit.success')): ?><p role="status"><?= htmlspecialchars((string)$success, ENT_QUOTES, 'UTF-8') ?></p><?php \App\Support\Session::forget('unit.success'); endif; ?>
-    <p><a href="/units/create<?= $building_id ? '?building_id='.(int)$building_id : '' ?>">+ افزودن واحد</a> | <a href="/persons">مدیریت اشخاص</a></p>
+    <p><a href="/units/create<?= $building_id ? '?building_id='.(int)$building_id : '' ?>">+ افزودن واحد</a> | <a href="/persons">مدیریت اشخاص</a> | <a href="/contracts">قراردادها</a></p>
     <form method="get">
         <input name="q" placeholder="جستجوی شماره، کدپستی یا بلوک" value="<?= htmlspecialchars((string)$search, ENT_QUOTES, 'UTF-8') ?>">
         <select name="building_id" onchange="this.form.submit()"><option value="">همه ساختمان‌ها</option>
@@ -31,7 +31,8 @@
                 <td><?= ['settled'=>'تسویه','debtor'=>'بدهکار','creditor'=>'بستانکار'][$row['financial_status']] ?? $row['financial_status'] ?></td>
                 <td><?= ['north'=>'شمالی','south'=>'جنوبی','east'=>'شرقی','west'=>'غربی'][$row['direction']] ?? '-' ?></td>
                 <td><a href="/units/edit?id=<?= (int)$row['id'] ?>">ویرایش</a> |
-                    <a href="/unit-memberships?unit_id=<?= (int)$row['id'] ?>">مالک/مستأجر</a>
+                    <a href="/unit-memberships?unit_id=<?= (int)$row['id'] ?>">مالک/مستأجر</a> |
+                    <a href="/contracts?unit_id=<?= (int)$row['id'] ?>">قراردادها</a>
                     <form method="post" action="/units/delete" style="display:inline" onsubmit="return confirm('آیا از حذف این واحد اطمینان دارید؟');"><input type="hidden" name="_token" value="<?= htmlspecialchars((string)$csrf_token, ENT_QUOTES, 'UTF-8') ?>"><input type="hidden" name="id" value="<?= (int)$row['id'] ?>"><button type="submit">حذف</button></form></td>
             </tr>
         <?php endforeach; ?>
