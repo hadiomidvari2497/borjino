@@ -1,0 +1,4 @@
+<?php
+require_once __DIR__.'/config.php'; require_login(); page_header('داشبورد');
+$counts=[]; foreach(['buildings'=>'ساختمان','blocks'=>'بلوک','units'=>'واحد','persons'=>'شخص','contracts'=>'قرارداد'] as $table=>$label){$counts[$table]=(int)$pdo->query("SELECT COUNT(*) FROM {$table}")->fetchColumn();}
+?><h1>داشبورد</h1><p>سلام <?=e(current_user()['full_name'] ?: current_user()['username'])?> 👋</p><div class="cards"><?php foreach($counts as $k=>$v): ?><a class="card" href="<?=$k?>.php"><b><?=$v?></b><span><?=$k==='buildings'?'ساختمان':($k==='blocks'?'بلوک':($k==='units'?'واحد':($k==='persons'?'شخص':'قرارداد')))?></span></a><?php endforeach;?></div><div class="panel"><h2>شروع سریع</h2><p>از منوی بالا ساختمان، بلوک، واحد، شخص و قرارداد را مدیریت کن. نسخه ساده است: PHP + MySQL + PDO، بدون فریم‌ورک و بدون Composer.</p></div><?php page_footer(); ?>
