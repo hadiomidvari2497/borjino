@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Controllers\AuthController;
 use App\Controllers\BlockController;
 use App\Controllers\BuildingController;
+use App\Controllers\ContractController;
 use App\Controllers\DashboardController;
 use App\Controllers\HomeController;
 use App\Controllers\PersonController;
@@ -14,6 +15,7 @@ use App\Database\Connection;
 use App\Middleware\AuthMiddleware;
 use App\Repositories\BlockRepository;
 use App\Repositories\BuildingRepository;
+use App\Repositories\ContractRepository;
 use App\Repositories\PersonRepository;
 use App\Repositories\UnitMembershipRepository;
 use App\Repositories\UnitRepository;
@@ -34,6 +36,7 @@ $blockRepository = new BlockRepository($pdo);
 $unitRepository = new UnitRepository($pdo);
 $personRepository = new PersonRepository($pdo);
 $membershipRepository = new UnitMembershipRepository($pdo);
+$contractRepository = new ContractRepository($pdo);
 
 $homeController = new HomeController($view);
 $authController = new AuthController($view, $authService);
@@ -43,6 +46,7 @@ $blockController = new BlockController($view, $blockRepository, $buildingReposit
 $unitController = new UnitController($view, $unitRepository, $buildingRepository, $blockRepository, $authMiddleware);
 $personController = new PersonController($view, $personRepository, $authMiddleware);
 $membershipController = new UnitMembershipController($view, $membershipRepository, $personRepository, $unitRepository, $authMiddleware);
+$contractController = new ContractController($view, $contractRepository, $personRepository, $unitRepository, $authMiddleware);
 
 $router->get('/', [$homeController, 'index']);
 $router->get('/login', [$authController, 'showLogin']);
@@ -81,5 +85,11 @@ $router->post('/unit-memberships/store', [$membershipController, 'store']);
 $router->get('/unit-memberships/edit', [$membershipController, 'edit']);
 $router->post('/unit-memberships/update', [$membershipController, 'update']);
 $router->post('/unit-memberships/delete', [$membershipController, 'delete']);
+$router->get('/contracts', [$contractController, 'index']);
+$router->get('/contracts/create', [$contractController, 'create']);
+$router->post('/contracts/store', [$contractController, 'store']);
+$router->get('/contracts/edit', [$contractController, 'edit']);
+$router->post('/contracts/update', [$contractController, 'update']);
+$router->post('/contracts/delete', [$contractController, 'delete']);
 
 return $router;
