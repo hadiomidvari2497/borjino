@@ -9,11 +9,13 @@ use App\Controllers\DashboardController;
 use App\Controllers\HomeController;
 use App\Controllers\PersonController;
 use App\Controllers\UnitController;
+use App\Controllers\UnitMembershipController;
 use App\Database\Connection;
 use App\Middleware\AuthMiddleware;
 use App\Repositories\BlockRepository;
 use App\Repositories\BuildingRepository;
 use App\Repositories\PersonRepository;
+use App\Repositories\UnitMembershipRepository;
 use App\Repositories\UnitRepository;
 use App\Repositories\UserRepository;
 use App\Services\AuthService;
@@ -31,6 +33,7 @@ $buildingRepository = new BuildingRepository($pdo);
 $blockRepository = new BlockRepository($pdo);
 $unitRepository = new UnitRepository($pdo);
 $personRepository = new PersonRepository($pdo);
+$membershipRepository = new UnitMembershipRepository($pdo);
 
 $homeController = new HomeController($view);
 $authController = new AuthController($view, $authService);
@@ -39,6 +42,7 @@ $buildingController = new BuildingController($view, $buildingRepository, $authMi
 $blockController = new BlockController($view, $blockRepository, $buildingRepository, $authMiddleware);
 $unitController = new UnitController($view, $unitRepository, $buildingRepository, $blockRepository, $authMiddleware);
 $personController = new PersonController($view, $personRepository, $authMiddleware);
+$membershipController = new UnitMembershipController($view, $membershipRepository, $personRepository, $unitRepository, $authMiddleware);
 
 $router->get('/', [$homeController, 'index']);
 $router->get('/login', [$authController, 'showLogin']);
@@ -71,5 +75,11 @@ $router->post('/persons/store', [$personController, 'store']);
 $router->get('/persons/edit', [$personController, 'edit']);
 $router->post('/persons/update', [$personController, 'update']);
 $router->post('/persons/delete', [$personController, 'delete']);
+$router->get('/unit-memberships', [$membershipController, 'index']);
+$router->get('/unit-memberships/create', [$membershipController, 'create']);
+$router->post('/unit-memberships/store', [$membershipController, 'store']);
+$router->get('/unit-memberships/edit', [$membershipController, 'edit']);
+$router->post('/unit-memberships/update', [$membershipController, 'update']);
+$router->post('/unit-memberships/delete', [$membershipController, 'delete']);
 
 return $router;
