@@ -1,36 +1,12 @@
-# برجینو (Borjino)
+# برجینو — نسخه ساده PHP + MySQL
 
-سامانه مدیریت ساختمان — پروژه در حال توسعه بر اساس سند مشخصات فنی و نیازمندی‌های برجینو.
+سیستم مدیریت ساختمان با PHP خام و MySQL، مناسب XAMPP.
 
-## Stack
-- Backend: Raw PHP 8.2+
-- Database: MySQL 8+
-- Database access: PDO
-- UI: RTL، با baseline بر مبنای قالب Nextable ارسالی
+## نصب
+1. پروژه را داخل `htdocs/borjino` قرار دهید.
+2. در phpMyAdmin دیتابیس `borjino` بسازید.
+3. فایل `database.sql` را Import کنید.
+4. `setup_admin.php` را باز کنید و کاربر مدیر را بسازید.
+5. وارد `login.php` شوید.
 
-## وضعیت فعلی
-- [x] تحلیل اولیه نیازمندی‌ها
-- [x] طراحی اولیه دیتابیس و روابط
-- [x] Migrationهای MySQL و کنترل FKهای اصلی
-- [x] اسکلت Raw PHP و PDO
-- [x] احراز هویت پایه، Session و CSRF
-- [x] CI شامل syntax check، migration smoke test و security smoke test
-- [x] شروع ماژول مدیریت ساختمان (CRUD پایه)
-- [ ] مدیریت کامل بلوک/واحد و ساخت گروهی واحدها
-- [ ] اشخاص، اعضا، پرسنل و قراردادها
-- [ ] موتور شارژ و هزینه‌ها
-- [ ] پرداخت، پیامک، اعلان، تنظیمات و گزارش‌ها
-- [ ] تست یکپارچه و سخت‌سازی نهایی
-
-## مستندات
-- `docs/database/schema.mysql.sql` — baseline اسکیمای MySQL و PK/FK
-- `docs/database/README.md` — قواعد دیتابیس
-- `docs/roadmap.md` — مسیر راه و وضعیت هر فاز
-- `template/README.md` — راهنمای قالب خام
-- `template/index.html` — پوسته اولیه RTL
-
-## توسعه
-هر تغییر باید قابل تست، مستند و با commit مشخص در Git ثبت شود. Migrationهای اعمال‌شده نباید درجا ویرایش شوند؛ برای تغییر schema، migration جدید ایجاد کنید.
-
-## منبع نیازمندی
-سند «مشخصات فنی و نیازمندی‌های سامانه مدیریت ساختمان برجینو» مبنای تحلیل پروژه است و تصمیم‌های دامنه‌ای باید با آن تطبیق داده شوند.
+بدون Composer، بدون Framework و بدون Migration.
