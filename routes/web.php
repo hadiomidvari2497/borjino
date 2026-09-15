@@ -7,11 +7,13 @@ use App\Controllers\BlockController;
 use App\Controllers\BuildingController;
 use App\Controllers\DashboardController;
 use App\Controllers\HomeController;
+use App\Controllers\PersonController;
 use App\Controllers\UnitController;
 use App\Database\Connection;
 use App\Middleware\AuthMiddleware;
 use App\Repositories\BlockRepository;
 use App\Repositories\BuildingRepository;
+use App\Repositories\PersonRepository;
 use App\Repositories\UnitRepository;
 use App\Repositories\UserRepository;
 use App\Services\AuthService;
@@ -28,6 +30,7 @@ $authMiddleware = new AuthMiddleware($authService);
 $buildingRepository = new BuildingRepository($pdo);
 $blockRepository = new BlockRepository($pdo);
 $unitRepository = new UnitRepository($pdo);
+$personRepository = new PersonRepository($pdo);
 
 $homeController = new HomeController($view);
 $authController = new AuthController($view, $authService);
@@ -35,6 +38,7 @@ $dashboardController = new DashboardController($view, $authMiddleware, $authServ
 $buildingController = new BuildingController($view, $buildingRepository, $authMiddleware);
 $blockController = new BlockController($view, $blockRepository, $buildingRepository, $authMiddleware);
 $unitController = new UnitController($view, $unitRepository, $buildingRepository, $blockRepository, $authMiddleware);
+$personController = new PersonController($view, $personRepository, $authMiddleware);
 
 $router->get('/', [$homeController, 'index']);
 $router->get('/login', [$authController, 'showLogin']);
@@ -61,5 +65,11 @@ $router->post('/units/update', [$unitController, 'update']);
 $router->post('/units/delete', [$unitController, 'delete']);
 $router->get('/units/generate', [$unitController, 'generate']);
 $router->post('/units/generate', [$unitController, 'generateStore']);
+$router->get('/persons', [$personController, 'index']);
+$router->get('/persons/create', [$personController, 'create']);
+$router->post('/persons/store', [$personController, 'store']);
+$router->get('/persons/edit', [$personController, 'edit']);
+$router->post('/persons/update', [$personController, 'update']);
+$router->post('/persons/delete', [$personController, 'delete']);
 
 return $router;
