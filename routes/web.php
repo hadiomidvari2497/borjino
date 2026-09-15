@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Controllers\AuthController;
 use App\Controllers\BlockController;
 use App\Controllers\BuildingController;
+use App\Controllers\BuildingPersonnelController;
 use App\Controllers\ContractController;
 use App\Controllers\DashboardController;
 use App\Controllers\HomeController;
@@ -14,6 +15,7 @@ use App\Controllers\UnitMembershipController;
 use App\Database\Connection;
 use App\Middleware\AuthMiddleware;
 use App\Repositories\BlockRepository;
+use App\Repositories\BuildingPersonnelRepository;
 use App\Repositories\BuildingRepository;
 use App\Repositories\ContractRepository;
 use App\Repositories\PersonRepository;
@@ -37,6 +39,7 @@ $unitRepository = new UnitRepository($pdo);
 $personRepository = new PersonRepository($pdo);
 $membershipRepository = new UnitMembershipRepository($pdo);
 $contractRepository = new ContractRepository($pdo);
+$buildingPersonnelRepository = new BuildingPersonnelRepository($pdo);
 
 $homeController = new HomeController($view);
 $authController = new AuthController($view, $authService);
@@ -47,6 +50,7 @@ $unitController = new UnitController($view, $unitRepository, $buildingRepository
 $personController = new PersonController($view, $personRepository, $authMiddleware);
 $membershipController = new UnitMembershipController($view, $membershipRepository, $personRepository, $unitRepository, $authMiddleware);
 $contractController = new ContractController($view, $contractRepository, $personRepository, $unitRepository, $authMiddleware);
+$buildingPersonnelController = new BuildingPersonnelController($view, $buildingPersonnelRepository, $buildingRepository, $personRepository, $authMiddleware);
 
 $router->get('/', [$homeController, 'index']);
 $router->get('/login', [$authController, 'showLogin']);
@@ -91,5 +95,11 @@ $router->post('/contracts/store', [$contractController, 'store']);
 $router->get('/contracts/edit', [$contractController, 'edit']);
 $router->post('/contracts/update', [$contractController, 'update']);
 $router->post('/contracts/delete', [$contractController, 'delete']);
+$router->get('/building-personnel', [$buildingPersonnelController, 'index']);
+$router->get('/building-personnel/create', [$buildingPersonnelController, 'create']);
+$router->post('/building-personnel/store', [$buildingPersonnelController, 'store']);
+$router->get('/building-personnel/edit', [$buildingPersonnelController, 'edit']);
+$router->post('/building-personnel/update', [$buildingPersonnelController, 'update']);
+$router->post('/building-personnel/delete', [$buildingPersonnelController, 'delete']);
 
 return $router;
