@@ -3,6 +3,7 @@ function page_header(string $title='برجینو'): void {
     $u = current_user();
     $f = flash();
     $page_title = $title;
+    $tpl = 'https://raw.githubusercontent.com/parhamIH/Vira-online-shop/main/frontend/templateAdmin/';
 ?>
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
@@ -10,17 +11,17 @@ function page_header(string $title='برجینو'): void {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title><?= e($page_title ?? 'برجینو') ?> - برجینو</title>
-    <link rel="shortcut icon" href="assets/media/image/favicon.png">
+    <title><?= e($page_title) ?> - برجینو</title>
+    <link rel="shortcut icon" href="<?= $tpl ?>assets/media/image/favicon.png">
     <meta name="theme-color" content="#5867dd">
-    <link rel="stylesheet" href="vendors/bundle.css" type="text/css">
-    <link rel="stylesheet" href="assets/css/app.css" type="text/css">
+    <link rel="stylesheet" href="<?= $tpl ?>vendors/bundle.css" type="text/css">
+    <link rel="stylesheet" href="<?= $tpl ?>assets/css/app.css" type="text/css">
 </head>
 <body>
 <div class="page-loader"><div class="spinner-border"></div></div>
 <div class="sidebar" id="userProfile">
     <div class="text-center p-4">
-        <figure class="avatar avatar-state-success avatar-lg mb-4"><img src="assets/media/image/avatar.jpg" class="rounded-circle" alt="avatar"></figure>
+        <figure class="avatar avatar-state-success avatar-lg mb-4"><img src="<?= $tpl ?>assets/media/image/avatar.jpg" class="rounded-circle" alt="avatar"></figure>
         <h4 class="text-primary m-b-10"><?= e($u['full_name'] ?? 'مدیر سیستم') ?></h4>
         <p class="text-muted d-flex align-items-center justify-content-center line-height-0 mb-0">مدیر سامانه</p>
     </div>
@@ -39,15 +40,15 @@ function page_header(string $title='برجینو'): void {
     </div>
     <div class="navigation-menu-body">
         <ul id="navigationDashboards" class="navigation-active"><li class="navigation-divider">داشبورد</li><li><a class="active" href="index.php">داشبورد اصلی</a></li></ul>
-        <ul id="navigationBuilding"><li class="navigation-divider">ساختمان</li><li><a href="buildings.php">ساختمان‌ها</a></li><li><a href="blocks.php">بلوک‌ها</a></li><li><a href="units.php">واحدها</a></li></ul>
+        <ul id="navigationBuilding"><li class="navigation-divider">مدیریت ساختمان</li><li><a href="buildings.php">ساختمان‌ها</a></li><li><a href="blocks.php">بلوک‌ها</a></li><li><a href="units.php">واحدها</a></li></ul>
         <ul id="navigationPeople"><li class="navigation-divider">افراد و قراردادها</li><li><a href="persons.php">اشخاص</a></li><li><a href="contracts.php">قراردادها</a></li></ul>
         <ul id="navigationFinance"><li class="navigation-divider">مالی</li><li><a href="charges.php">شارژها</a></li></ul>
     </div>
 </div>
 <div class="header">
-    <div class="header-logo"><a href="index.php"><img class="large-logo" src="assets/media/image/logo.png" alt="برجینو"><img class="small-logo" src="assets/media/image/logo-sm.png" alt="برجینو"><img class="dark-logo" src="assets/media/image/logo-dark.png" alt="برجینو"></a></div>
+    <div class="header-logo"><a href="index.php"><img class="large-logo" src="<?= $tpl ?>assets/media/image/logo.png" alt="برجینو"><img class="small-logo" src="<?= $tpl ?>assets/media/image/logo-sm.png" alt="برجینو"><img class="dark-logo" src="<?= $tpl ?>assets/media/image/logo-dark.png" alt="برجینو"></a></div>
     <div class="header-body">
-        <div class="header-body-left"><h3 class="page-title"><?= e($page_title ?? 'داشبورد') ?></h3><nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="index.php">برجینو</a></li><li class="breadcrumb-item active" aria-current="page"><?= e($page_title ?? 'داشبورد') ?></li></ol></nav></div>
+        <div class="header-body-left"><h3 class="page-title"><?= e($page_title) ?></h3><nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="index.php">برجینو</a></li><li class="breadcrumb-item active" aria-current="page"><?= e($page_title) ?></li></ol></nav></div>
         <div class="header-body-right"><ul class="navbar-nav"><li class="nav-item"><a href="#" class="nav-link"><i class="ti-search"></i></a></li><li class="nav-item"><a href="#settings" class="nav-link"><i class="ti-settings"></i></a></li><li class="nav-item"><a href="logout.php" class="nav-link"><i class="ti-power-off"></i></a></li></ul></div>
     </div>
 </div>
@@ -58,8 +59,8 @@ function page_header(string $title='برجینو'): void {
 function page_footer(): void {
 ?>
 </div>
-<script src="vendors/bundle.js"></script>
-<script src="assets/js/app.js"></script>
+<script src="https://raw.githubusercontent.com/parhamIH/Vira-online-shop/main/frontend/templateAdmin/vendors/bundle.js"></script>
+<script src="https://raw.githubusercontent.com/parhamIH/Vira-online-shop/main/frontend/templateAdmin/assets/js/app.js"></script>
 <div class="colors"><div class="bg-primary"></div><div class="bg-primary-bright"></div><div class="bg-secondary"></div><div class="bg-secondary-bright"></div><div class="bg-info"></div><div class="bg-info-bright"></div><div class="bg-success"></div><div class="bg-success-bright"></div><div class="bg-danger"></div><div class="bg-danger-bright"></div><div class="bg-warning"></div><div class="bg-warning-bright"></div></div>
 </body></html>
 <?php
