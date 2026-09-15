@@ -1,3 +1,113 @@
 <?php
-function page_header(string $title='برجینو'): void { $u=current_user(); $f=flash(); ?><!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title><?=e($title)?> | برجینو</title><link rel="stylesheet" href="assets/style.css"></head><body><header><div class="brand">🏢 برجینو</div><nav><?php if($u): ?><a href="index.php">داشبورد</a><a href="buildings.php">ساختمان‌ها</a><a href="blocks.php">بلوک‌ها</a><a href="units.php">واحدها</a><a href="persons.php">اشخاص</a><a href="contracts.php">قراردادها</a><a href="charges.php">شارژ</a><a href="logout.php">خروج</a><?php endif; ?></nav></header><main><?php if($f): ?><div class="flash"><?=e($f)?></div><?php endif; ?><?php }
-function page_footer(): void { ?></main><footer>برجینو - سامانه مدیریت ساختمان</footer></body></html><?php }
+function page_header(string $title='برجینو'): void {
+    $u = current_user();
+    $f = flash();
+    $page_title = $title;
+?>
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title><?= e($page_title ?? 'برجینو') ?> - برجینو</title>
+    <link rel="shortcut icon" href="assets/media/image/favicon.png">
+    <meta name="theme-color" content="#5867dd">
+    <link rel="stylesheet" href="vendors/bundle.css" type="text/css">
+    <link rel="stylesheet" href="assets/css/app.css" type="text/css">
+</head>
+<body>
+<div class="page-loader"><div class="spinner-border"></div></div>
+
+<div class="sidebar" id="userProfile">
+    <div class="text-center p-4">
+        <figure class="avatar avatar-state-success avatar-lg mb-4">
+            <img src="assets/media/image/avatar.jpg" class="rounded-circle" alt="avatar">
+        </figure>
+        <h4 class="text-primary m-b-10"><?= e($u['full_name'] ?? 'مدیر سیستم') ?></h4>
+        <p class="text-muted d-flex align-items-center justify-content-center line-height-0 mb-0">مدیر سامانه</p>
+    </div>
+    <hr class="m-0">
+    <div class="p-4">
+        <div class="mb-4"><h6 class="font-size-13 mb-3">سامانه مدیریت ساختمان</h6><p class="text-muted">برجینو</p></div>
+    </div>
+</div>
+
+<div class="sidebar" id="settings">
+    <header><i class="ti-settings"></i> تنظیمات</header>
+    <div class="p-4"><p class="text-muted">تنظیمات سامانه در این بخش قرار می‌گیرد.</p></div>
+</div>
+
+<div class="navigation">
+    <div class="navigation-icon-menu">
+        <ul>
+            <li class="active" data-toggle="tooltip" title="داشبورد"><a href="#navigationDashboards"><i class="icon ti-pie-chart"></i></a></li>
+            <li data-toggle="tooltip" title="ساختمان"><a href="#navigationBuilding"><i class="icon ti-home"></i></a></li>
+            <li data-toggle="tooltip" title="مالی"><a href="#navigationFinance"><i class="icon ti-wallet"></i></a></li>
+            <li data-toggle="tooltip" title="افراد"><a href="#navigationPeople"><i class="icon ti-user"></i></a></li>
+        </ul>
+        <ul>
+            <li data-toggle="tooltip" title="تنظیمات"><a href="#settings"><i class="icon ti-settings"></i></a></li>
+            <li data-toggle="tooltip" title="خروج"><a href="logout.php" class="go-to-page"><i class="icon ti-power-off"></i></a></li>
+        </ul>
+    </div>
+    <div class="navigation-menu-body">
+        <ul id="navigationDashboards" class="navigation-active">
+            <li class="navigation-divider">داشبورد</li>
+            <li><a class="active" href="index.php">داشبورد اصلی</a></li>
+        </ul>
+        <ul id="navigationBuilding">
+            <li class="navigation-divider">ساختمان</li>
+            <li><a href="buildings.php">ساختمان‌ها</a></li>
+            <li><a href="blocks.php">بلوک‌ها</a></li>
+            <li><a href="units.php">واحدها</a></li>
+        </ul>
+        <ul id="navigationPeople">
+            <li class="navigation-divider">افراد و قراردادها</li>
+            <li><a href="persons.php">اشخاص</a></li>
+            <li><a href="contracts.php">قراردادها</a></li>
+        </ul>
+        <ul id="navigationFinance">
+            <li class="navigation-divider">مالی</li>
+            <li><a href="charges.php">شارژها</a></li>
+        </ul>
+    </div>
+</div>
+
+<div class="header">
+    <div class="header-logo">
+        <a href="index.php">
+            <img class="large-logo" src="assets/media/image/logo.png" alt="برجینو">
+            <img class="small-logo" src="assets/media/image/logo-sm.png" alt="برجینو">
+            <img class="dark-logo" src="assets/media/image/logo-dark.png" alt="برجینو">
+        </a>
+    </div>
+    <div class="header-body">
+        <div class="header-body-left">
+            <h3 class="page-title"><?= e($page_title ?? 'داشبورد') ?></h3>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="index.php">برجینو</a></li>
+                    <li class="breadcrumb-item active" aria-current="page"><?= e($page_title ?? 'داشبورد') ?></li>
+                </ol>
+            </nav>
+        </div>
+        <div class="header-body-right">
+            <ul class="navbar-nav">
+                <li class="nav-item"><a href="#" class="nav-link" data-toggle="dropdown"><i class="ti-search"></i></a></li>
+                <li class="nav-item"><a href="#" class="nav-link" data-sidebar-target="#settings"><i class="ti-settings"></i></a></li>
+                <li class="nav-item"><a href="logout.php" class="nav-link"><i class="ti-power-off"></i></a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<?php if ($f): ?>
+<div class="main-content">
+    <div class="alert alert-info alert-with-border alert-dismissible fade show" role="alert">
+        <?= e($f) ?>
+        <button type="button" class="close" data-dismiss="alert" aria-label="بستن"><span aria-hidden="true">&times;</span></button>
+    </div>
+<?php else: ?>
+<div class="main-content">
+<?php endif; ?>
