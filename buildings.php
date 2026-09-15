@@ -1,7 +1,146 @@
 <?php
-require_once __DIR__.'/config.php'; require_login();
-$edit=null; if(isset($_GET['edit'])){$st=$pdo->prepare('SELECT * FROM buildings WHERE id=?');$st->execute([(int)$_GET['edit']]);$edit=$st->fetch();}
-if(isset($_GET['delete'])){$st=$pdo->prepare('DELETE FROM buildings WHERE id=?');$st->execute([(int)$_GET['delete']]);flash('ساختمان حذف شد.');redirect('buildings.php');}
-if($_SERVER['REQUEST_METHOD']==='POST'){check_csrf();$data=[trim(post('name')),trim(post('code'))?:null,post('building_type','residential'),trim(post('address'))?:null,(int)post('total_floors',0),(int)post('units_per_floor',0),(int)post('parking_count',0),(int)post('storage_count',0),trim(post('manager_name'))?:null,trim(post('manager_phone'))?:null];if(post('id')){$data[]=(int)post('id');$pdo->prepare('UPDATE buildings SET name=?,code=?,building_type=?,address=?,total_floors=?,units_per_floor=?,parking_count=?,storage_count=?,manager_name=?,manager_phone=? WHERE id=?')->execute($data);flash('ساختمان ویرایش شد.');}else{$pdo->prepare('INSERT INTO buildings(name,code,building_type,address,total_floors,units_per_floor,parking_count,storage_count,manager_name,manager_phone) VALUES(?,?,?,?,?,?,?,?,?,?)')->execute($data);flash('ساختمان اضافه شد.');}redirect('buildings.php');}
-$rows=$pdo->query('SELECT * FROM buildings ORDER BY id DESC')->fetchAll(); page_header('ساختمان‌ها');
-?><div class="toolbar"><h1>ساختمان‌ها</h1><a class="button" href="buildings.php?new=1">+ ساختمان جدید</a></div><?php if(isset($_GET['new'])||$edit):?><form class="form" method="post"><?=csrf_field()?><?php if($edit):?><input type="hidden" name="id" value="<?=e($edit['id'])?>"><?php endif;?><div class="grid"><label>نام ساختمان<input name="name" required value="<?=e($edit['name']??'')?>"></label><label>کد<input name="code" value="<?=e($edit['code']??'')?>"></label><label>نوع<select name="building_type"><option value="residential">مسکونی</option><option value="commercial">تجاری</option><option value="office">اداری</option><option value="educational">آموزشی</option><option value="other">سایر</option></select></label><label>تعداد طبقات<input type="number" name="total_floors" value="<?=e($edit['total_floors']??0)"></label><label>واحد در هر طبقه<input type="number" name="units_per_floor" value="<?=e($edit['units_per_floor']??0)"></label><label>پارکینگ<input type="number" name="parking_count" value="<?=e($edit['parking_count']??0)"></label><label>انباری<input type="number" name="storage_count" value="<?=e($edit['storage_count']??0)"></label><label>مدیر<input name="manager_name" value="<?=e($edit['manager_name']??'')?>"></label><label>تلفن مدیر<input name="manager_phone" value="<?=e($edit['manager_phone']??'')?>"></label><label style="grid-column:1/-1">آدرس<textarea name="address"><?=e($edit['address']??'')?></textarea></label></div><div class="actions"><button>ذخیره</button><a class="button" href="buildings.php">انصراف</a></div></form><hr><?php endif;?><div class="table-wrap"><table class="table"><tr><th>نام</th><th>نوع</th><th>طبقات</th><th>واحد/طبقه</th><th>مدیر</th><th>عملیات</th></tr><?php foreach($rows as $r):?><tr><td><?=e($r['name'])?></td><td><?=e($r['building_type'])?></td><td><?=$r['total_floors']?></td><td><?=$r['units_per_floor']?></td><td><?=e($r['manager_name'])?></td><td><a class="button" href="buildings.php?edit=<?=$r['id']?>">ویرایش</a> <a class="button danger" onclick="return confirm('حذف شود؟')" href="buildings.php?delete=<?=$r['id']?>">حذف</a></td></tr><?php endforeach;?></table></div><?php page_footer(); ?>
+require_once __DIR__ . '/config.php';
+require_login();
+
+$edit = null;
+
+if (isset($_GET['edit'])) {
+    $st = $pdo->prepare('SELECT * FROM buildings WHERE id=?');
+    $st->execute([(int) $_GET['edit']]);
+    $edit = $st->fetch();
+}
+
+if (isset($_GET['delete'])) {
+    $st = $pdo->prepare('DELETE FROM buildings WHERE id=?');
+    $st->execute([(int) $_GET['delete']]);
+    flash('ساختمان حذف شد.');
+    redirect('buildings.php');
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    check_csrf();
+
+    $data = [
+        trim(post('name')),
+        trim(post('code')) ?: null,
+        post('building_type', 'residential'),
+        trim(post('address')) ?: null,
+        (int) post('total_floors', 0),
+        (int) post('units_per_floor', 0),
+        (int) post('parking_count', 0),
+        (int) post('storage_count', 0),
+        trim(post('manager_name')) ?: null,
+        trim(post('manager_phone')) ?: null,
+    ];
+
+    if (post('id')) {
+        $data[] = (int) post('id');
+        $pdo->prepare('UPDATE buildings SET name=?,code=?,building_type=?,address=?,total_floors=?,units_per_floor=?,parking_count=?,storage_count=?,manager_name=?,manager_phone=? WHERE id=?')->execute($data);
+        flash('ساختمان ویرایش شد.');
+    } else {
+        $pdo->prepare('INSERT INTO buildings(name,code,building_type,address,total_floors,units_per_floor,parking_count,storage_count,manager_name,manager_phone) VALUES(?,?,?,?,?,?,?,?,?,?)')->execute($data);
+        flash('ساختمان اضافه شد.');
+    }
+
+    redirect('buildings.php');
+}
+
+$rows = $pdo->query('SELECT * FROM buildings ORDER BY id DESC')->fetchAll();
+page_header('ساختمان‌ها');
+?>
+
+<div class="toolbar">
+    <h1>ساختمان‌ها</h1>
+    <a class="button" href="buildings.php?new=1">+ ساختمان جدید</a>
+</div>
+
+<?php if (isset($_GET['new']) || $edit): ?>
+<form class="form" method="post">
+    <?= csrf_field() ?>
+    <?php if ($edit): ?>
+        <input type="hidden" name="id" value="<?= e($edit['id']) ?>">
+    <?php endif; ?>
+
+    <div class="grid">
+        <label>نام ساختمان
+            <input name="name" required value="<?= e($edit['name'] ?? '') ?>">
+        </label>
+
+        <label>کد
+            <input name="code" value="<?= e($edit['code'] ?? '') ?>">
+        </label>
+
+        <label>نوع
+            <select name="building_type">
+                <option value="residential">مسکونی</option>
+                <option value="commercial">تجاری</option>
+                <option value="office">اداری</option>
+                <option value="educational">آموزشی</option>
+                <option value="other">سایر</option>
+            </select>
+        </label>
+
+        <label>تعداد طبقات
+            <input type="number" name="total_floors" value="<?= e($edit['total_floors'] ?? 0) ?>">
+        </label>
+
+        <label>واحد در هر طبقه
+            <input type="number" name="units_per_floor" value="<?= e($edit['units_per_floor'] ?? 0) ?>">
+        </label>
+
+        <label>پارکینگ
+            <input type="number" name="parking_count" value="<?= e($edit['parking_count'] ?? 0) ?>">
+        </label>
+
+        <label>انباری
+            <input type="number" name="storage_count" value="<?= e($edit['storage_count'] ?? 0) ?>">
+        </label>
+
+        <label>مدیر
+            <input name="manager_name" value="<?= e($edit['manager_name'] ?? '') ?>">
+        </label>
+
+        <label>تلفن مدیر
+            <input name="manager_phone" value="<?= e($edit['manager_phone'] ?? '') ?>">
+        </label>
+
+        <label style="grid-column:1/-1">آدرس
+            <textarea name="address"><?= e($edit['address'] ?? '') ?></textarea>
+        </label>
+    </div>
+
+    <div class="actions">
+        <button>ذخیره</button>
+        <a class="button" href="buildings.php">انصراف</a>
+    </div>
+</form>
+<hr>
+<?php endif; ?>
+
+<div class="table-wrap">
+    <table class="table">
+        <tr>
+            <th>نام</th>
+            <th>نوع</th>
+            <th>طبقات</th>
+            <th>واحد/طبقه</th>
+            <th>مدیر</th>
+            <th>عملیات</th>
+        </tr>
+        <?php foreach ($rows as $r): ?>
+        <tr>
+            <td><?= e($r['name']) ?></td>
+            <td><?= e($r['building_type']) ?></td>
+            <td><?= $r['total_floors'] ?></td>
+            <td><?= $r['units_per_floor'] ?></td>
+            <td><?= e($r['manager_name']) ?></td>
+            <td>
+                <a class="button" href="buildings.php?edit=<?= $r['id'] ?>">ویرایش</a>
+                <a class="button danger" onclick="return confirm('حذف شود؟')" href="buildings.php?delete=<?= $r['id'] ?>">حذف</a>
+            </td>
+        </tr>
+        <?php endforeach; ?>
+    </table>
+</div>
+
+<?php page_footer(); ?>
