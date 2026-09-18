@@ -1,0 +1,20 @@
+<?php
+require_once __DIR__.'/config.php'; require_page_permission('charge_settings'); require_once __DIR__.'/includes/charge_engine.php';
+$methods=charge_methods();$settings=get_charge_settings($pdo);
+if($_SERVER['REQUEST_METHOD']==='POST'){check_csrf();$method=(int)post('calculation_method');$area=(float)post('area_percent',80);$person=(float)post('person_percent',20);$errors=[];if(!isset($methods[$method]))$errors[]='روش محاسبه نامعتبر است.';if(abs($area+$person-100)>0.001)$errors[]='مجموع سهم متراژ و نفر باید 100 درصد باشد.';if($errors){flash(implode(' ',$errors));redirect('charge_settings.php');}$st=$pdo->prepare('UPDATE charge_settings SET calculation_method=?,fixed_unit_amount=?,area_rate=?,person_rate=?,area_percent=?,person_percent=?,parking_rate=?,storage_rate=?,issue_day=?,warning_days=?,emergency_sms=? WHERE id=1');$st->execute([$method,(float)post('fixed_unit_amount',0),(float)post('area_rate',0),(float)post('person_rate',0),$area,$person,(float)post('parking_rate',0),(float)post('storage_rate',0),max(1,min(31,(int)post('issue_day',1))),max(0,min(30,(int)post('warning_days',3))),trim(post('emergency_sms'))?:null]);log_activity('update','charge_settings',1,'ویرایش تنظیمات شارژ');flash('تنظیمات شارژ ذخیره شد.');redirect('charge_settings.php');}
+page_header('تنظیمات شارژ');?>
+<div class="content-header mb-4"><div><h4 class="mb-1">تنظیمات شارژ</h4><p class="text-muted mb-0">روش انتخاب‌شده در زمان صدور شارژ توسط موتور محاسبه استفاده می‌شود.</p></div></div>
+<div class="card"><div class="card-body"><form method="post"><?=csrf_field()?><div class="row">
+<div class="col-md-6 form-group"><label>روش اصلی محاسبه شارژ</label><select class="form-control" name="calculation_method" required><?php foreach($methods as $k=>$v):?><option value="<?=$k?>" <?=$settings['calculation_method']==$k?'selected':''?>><?=$k?> - <?=e($v)?></option><?php endforeach;?></select></div>
+<div class="col-md-6 form-group"><label>مبلغ ثابت هر واحد (U)</label><input class="form-control" type="number" step="0.01" min="0" name="fixed_unit_amount" value="<?=e($settings['fixed_unit_amount'])?>"></div>
+<div class="col-md-4 form-group"><label>نرخ هر مترمربع (rm)</label><input class="form-control" type="number" step="0.0001" min="0" name="area_rate" value="<?=e($settings['area_rate'])?>"></div>
+<div class="col-md-4 form-group"><label>نرخ هر نفر (rn)</label><input class="form-control" type="number" step="0.01" min="0" name="person_rate" value="<?=e($settings['person_rate'])?>"></div>
+<div class="col-md-4 form-group"><label>نرخ هر پارکینگ</label><input class="form-control" type="number" step="0.01" min="0" name="parking_rate" value="<?=e($settings['parking_rate'])?>"></div>
+<div class="col-md-4 form-group"><label>نرخ هر انبار</label><input class="form-control" type="number" step="0.01" min="0" name="storage_rate" value="<?=e($settings['storage_rate'])?>"></div>
+<div class="col-md-4 form-group"><label>سهم متراژ در روش ترکیبی (%)</label><input class="form-control" type="number" step="0.01" min="0" max="100" name="area_percent" value="<?=e($settings['area_percent'])?>"></div>
+<div class="col-md-4 form-group"><label>سهم نفر در روش ترکیبی (%)</label><input class="form-control" type="number" step="0.01" min="0" max="100" name="person_percent" value="<?=e($settings['person_percent'])?>"></div>
+<div class="col-md-4 form-group"><label>روز صدور ماهانه</label><input class="form-control" type="number" min="1" max="31" name="issue_day" value="<?=e($settings['issue_day'])?>"></div>
+<div class="col-md-4 form-group"><label>روزهای هشدار نقص اطلاعات</label><input class="form-control" type="number" min="0" max="30" name="warning_days" value="<?=e($settings['warning_days'])?>"></div>
+<div class="col-md-4 form-group"><label>شماره اضطراری پیامک</label><input class="form-control" name="emergency_sms" value="<?=e($settings['emergency_sms']??'')?>"></div>
+<div class="col-12"><div class="alert alert-info">روش ۱۰ هزینه‌های متغیر همان دوره را بر اساس معیار تخصیص هر هزینه بین واحدها تقسیم می‌کند.</div></div>
+</div><button class="btn btn-primary">ذخیره تنظیمات</button></form></div></div><?php page_footer(); ?>
