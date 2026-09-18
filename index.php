@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__.'/config.php';
-require_login();
+require_permission('dashboard','view');
 page_header('داشبورد');
 $counts=[];
 foreach(['buildings'=>'ساختمان','blocks'=>'بلوک','units'=>'واحد','persons'=>'شخص','contracts'=>'قرارداد'] as $table=>$label){
