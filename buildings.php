@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__.'/config.php'; require_permission('buildings','view');
+require_once __DIR__.'/config.php'; require_page_permission('buildings');
 
 if(isset($_GET['delete'])){
     $id=(int)$_GET['delete']; $st=$pdo->prepare('SELECT COUNT(*) FROM blocks WHERE building_id=?'); $st->execute([$id]);
