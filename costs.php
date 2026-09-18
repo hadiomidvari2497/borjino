@@ -6,9 +6,9 @@ $types=['fixed'=>'هزینه ثابت','variable'=>'هزینه متغیر'];
 $categories=['general'=>'عمومی','utility'=>'قبوض مشاع','repair'=>'تعمیرات','other'=>'سایر'];
 $allocations=['equal'=>'مساوی','area'=>'بر اساس متراژ','person'=>'بر اساس تعداد نفر','combination'=>'ترکیبی'];
 
-if (isset($_GET['delete'])) {
+if ($_SERVER['REQUEST_METHOD']==='POST' && post('action')==='delete') {
     check_csrf();
-    $id=(int)$_GET['delete'];
+    $id=(int)post('id');
     $pdo->prepare('DELETE FROM costs WHERE id=?')->execute([$id]);
     log_activity('delete','costs',$id,'حذف هزینه');
     flash('هزینه حذف شد.');
@@ -100,7 +100,7 @@ page_header('هزینه‌ها');
 <table class="table table-hover mb-0"><thead><tr><th>ساختمان</th><th>عنوان</th><th>نوع</th><th>دسته</th><th>دوره</th><th>مبلغ</th><th>تقسیم</th><th>مشاع</th><th>عملیات</th></tr></thead><tbody>
 <?php foreach($rows as $r):?><tr>
 <td><?=e($r['building_name'])?></td><td><?=e($r['title'])?></td><td><?=e($types[$r['cost_type']]??$r['cost_type'])?></td><td><?=e($categories[$r['category']]??$r['category'])?></td><td><?=e($r['period']??'')?></td><td><?=money($r['amount'])?></td><td><?=e($r['allocation_method'] ? ($allocations[$r['allocation_method']]??$r['allocation_method']) : '—')?></td><td><?=$r['is_common']?'بله':'خیر'?></td>
-<td><a class="btn btn-sm btn-outline-primary" href="costs.php?edit=<?=$r['id']?>">ویرایش</a> <a class="btn btn-sm btn-outline-danger" href="costs.php?delete=<?=$r['id']?>&csrf=<?=e(csrf_token())?>" onclick="return confirm('این هزینه حذف شود؟')">حذف</a></td>
+<td><a class="btn btn-sm btn-outline-primary" href="costs.php?edit=<?=$r['id']?>">ویرایش</a> <form method="post" class="d-inline" onsubmit="return confirm('این هزینه حذف شود؟')"><?=csrf_field()?><input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="<?=$r['id']?>"><button class="btn btn-sm btn-outline-danger" type="submit">حذف</button></form></td>
 </tr><?php endforeach;?>
 </tbody></table></div></div></div>
 <script>
