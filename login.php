@@ -8,7 +8,9 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
     $st->execute([trim(post('username'))]);
     $user=$st->fetch();
     if ($user && password_verify(post('password'), $user['password'])) {
+        $pdo->prepare('UPDATE users SET last_login_at=NOW() WHERE id=?')->execute([(int)$user['id']]);
         login_user($user);
+        log_activity('login', 'users', (int)$user['id'], 'ورود موفق');
         redirect('index.php');
     }
     $error='نام کاربری یا رمز عبور اشتباه است.';
