@@ -136,7 +136,7 @@ jobs:
             echo "::warning::.env.example not found. Create one for production deployments."
           fi
 
-  database:
+    database:
     name: Database Schema Validation
     runs-on: ubuntu-latest
     services:
@@ -150,29 +150,39 @@ jobs:
         ports:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
       - name: Setup MySQL client
         run: sudo apt-get update && sudo apt-get install -y mysql-client
+
       - name: Wait for MySQL
         run: |
           for i in {1..30}; do
             mysqladmin ping -h 127.0.0.1 -u root -proot --silent && break
             sleep 2
           done
+
       - name: Run schema
-        run: mysql -h 127.0.0.1 -u root -proot radius_panel < database/panel_schema.sql
-      - name: Run migrations
         run: |
-          shopt -s nullglob
-          for f in database/migrations/*.sql; do
+          set -euo pipefail
+          mysql -h 127.0.0.1 -u root -proot radius_panel < database.sql
+
+      - name: Run database upgrades
+        run: |
+          set -euo pipefail
+          for f in upgrade_*.sql; do
+            [ -f "$f" ] || continue
             echo "Running $f..."
             mysql -h 127.0.0.1 -u root -proot radius_panel < "$f"
           done
-      - name: Verify tables created
-        run: mysql -h 127.0.0.1 -u root -proot radius_panel -e "SHOW TABLES;"
 
+      - name: Verify tables created
+        run: |
+          set -euo pipefail
+          mysql -h 127.0.0.1 -u root -proot radius_panel -e "SHOW TABLES;"
   test:
     name: Tests
     runs-on: ubuntu-latest
