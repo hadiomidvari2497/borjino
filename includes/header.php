@@ -23,7 +23,7 @@ function page_header(string $title='برجینو'): void {
     <div class="text-center p-4">
         <figure class="avatar avatar-state-success avatar-lg mb-4"><img src="<?= $tpl ?>assets/media/image/avatar.jpg" class="rounded-circle" alt="avatar"></figure>
         <h4 class="text-primary m-b-10"><?= e($u['full_name'] ?? 'مدیر سیستم') ?></h4>
-        <p class="text-muted d-flex align-items-center justify-content-center line-height-0 mb-0">مدیر سامانه</p>
+        <p class="text-muted d-flex align-items-center justify-content-center line-height-0 mb-0">کاربر سامانه</p>
     </div>
     <hr class="m-0"><div class="p-4"><div class="mb-4"><h6 class="font-size-13 mb-3">سامانه مدیریت ساختمان</h6><p class="text-muted">برجینو</p></div></div>
 </div>
@@ -42,7 +42,7 @@ function page_header(string $title='برجینو'): void {
         <ul id="navigationDashboards" class="navigation-active"><li class="navigation-divider">داشبورد</li><li><a class="active" href="index.php">داشبورد اصلی</a></li></ul>
         <ul id="navigationBuilding"><li class="navigation-divider">مدیریت ساختمان</li><li><a href="buildings.php">ساختمان‌ها</a></li><li><a href="blocks.php">بلوک‌ها</a></li><li><a href="units.php">واحدها</a></li></ul>
         <ul id="navigationPeople"><li class="navigation-divider">افراد و قراردادها</li><li><a href="persons.php">اشخاص</a></li><li><a href="contracts.php">قراردادها</a></li></ul>
-        <ul id="navigationFinance"><li class="navigation-divider">مالی</li><li><a href="charges.php">شارژها</a></li><li><a href="users.php">کاربران</a></li></ul><ul id="navigationSystem"><li class="navigation-divider">مدیریت سیستم</li><li><a href="users.php">کاربران</a></li><li><a href="access_groups.php">گروه‌های دسترسی</a></li></ul>
+        <ul id="navigationFinance"><li class="navigation-divider">مالی</li><li><a href="charges.php">شارژها</a></li></ul><ul id="navigationSystem"><li class="navigation-divider">مدیریت سیستم</li><li><a href="users.php">کاربران</a></li><li><a href="access_groups.php">گروه‌های دسترسی</a></li></ul>
     </div>
 </div>
 <div class="header">
