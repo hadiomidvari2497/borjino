@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__.'/config.php'; require_login();
+require_once __DIR__.'/config.php'; require_permission('units','view');
 function unit_status_label($v){return ['vacant'=>'خالی','repair'=>'در حال تعمیر','occupied'=>'ساکن','rented'=>'اجاره داده شده','sold'=>'فروخته شده'][$v]??$v;}
 function financial_label($v){return ['debtor'=>'بدهکار','creditor'=>'بستانکار','settled'=>'تسویه'][$v]??$v;}
 
