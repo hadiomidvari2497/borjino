@@ -29,8 +29,7 @@ CREATE TABLE IF NOT EXISTS activity_log (
   details TEXT,
   ip_address VARCHAR(45) DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX(user_id),
-  INDEX(resource),
+  INDEX(user_id), INDEX(resource),
   FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
@@ -42,8 +41,7 @@ INSERT INTO access_groups(name,description,is_system)
 SELECT 'administrators','دسترسی کامل سامانه',1
 WHERE NOT EXISTS (SELECT 1 FROM access_groups WHERE name='administrators');
 
-UPDATE users
-SET access_group_id=(SELECT id FROM access_groups WHERE name='administrators' LIMIT 1)
+UPDATE users SET access_group_id=(SELECT id FROM access_groups WHERE name='administrators' LIMIT 1)
 WHERE username='admin' AND (access_group_id IS NULL OR access_group_id=0);
 
 INSERT INTO permissions(group_id,resource,can_view,can_create,can_edit,can_delete)
@@ -52,9 +50,9 @@ FROM access_groups g
 CROSS JOIN (
  SELECT 'dashboard' resource UNION ALL SELECT 'buildings' UNION ALL SELECT 'blocks'
  UNION ALL SELECT 'units' UNION ALL SELECT 'persons' UNION ALL SELECT 'memberships'
- UNION ALL SELECT 'personnel' UNION ALL SELECT 'contracts' UNION ALL SELECT 'charges'
- UNION ALL SELECT 'payments' UNION ALL SELECT 'reports' UNION ALL SELECT 'users'
- UNION ALL SELECT 'access_groups' UNION ALL SELECT 'settings'
+ UNION ALL SELECT 'personnel' UNION ALL SELECT 'contracts' UNION ALL SELECT 'costs'
+ UNION ALL SELECT 'charges' UNION ALL SELECT 'payments' UNION ALL SELECT 'reports'
+ UNION ALL SELECT 'users' UNION ALL SELECT 'access_groups' UNION ALL SELECT 'settings'
 ) r
 WHERE g.name='administrators'
 ON DUPLICATE KEY UPDATE can_view=1,can_create=1,can_edit=1,can_delete=1;
