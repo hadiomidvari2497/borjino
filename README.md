@@ -10,3 +10,12 @@
 5. وارد `login.php` شوید.
 
 بدون Composer، بدون Framework و بدون Migration.
+
+
+## CI/CD
+
+GitHub Actions workflow در `.github/workflows/ci.yml` با هر Push به `main` و هر Pull Request اجرا می‌شود و:
+- syntax تمام فایل‌های PHP خارج از `docs/` را بررسی می‌کند.
+- ساختار اصلی پروژه را کنترل می‌کند.
+- حداقل ساختار SQL را اعتبارسنجی می‌کند.
+- یک Artifact قابل تحویل از پروژه می‌سازد که پوشه `docs/` را شامل نمی‌شود.
