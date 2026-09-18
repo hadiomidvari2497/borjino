@@ -34,7 +34,7 @@ function page_header(string $title='برجینو'): void {
             <li class="active" data-toggle="tooltip" title="داشبورد"><a href="#navigationDashboards"><i class="icon ti-pie-chart"></i></a></li>
             <li data-toggle="tooltip" title="ساختمان"><a href="#navigationBuilding"><i class="icon ti-home"></i></a></li>
             <li data-toggle="tooltip" title="مالی"><a href="#navigationFinance"><i class="icon ti-wallet"></i></a></li>
-            <li data-toggle="tooltip" title="افراد"><a href="#navigationPeople"><i class="icon ti-user"></i></a></li>
+            <li data-toggle="tooltip" title="افراد"><a href="#navigationPeople"><i class="icon ti-user"></i></a></li><li data-toggle="tooltip" title="مدیریت سیستم"><a href="#navigationSystem"><i class="icon ti-settings"></i></a></li>
         </ul>
         <ul><li data-toggle="tooltip" title="تنظیمات"><a href="#settings"><i class="icon ti-settings"></i></a></li><li data-toggle="tooltip" title="خروج"><a href="logout.php" class="go-to-page"><i class="icon ti-power-off"></i></a></li></ul>
     </div>
@@ -42,7 +42,7 @@ function page_header(string $title='برجینو'): void {
         <ul id="navigationDashboards" class="navigation-active"><li class="navigation-divider">داشبورد</li><li><a class="active" href="index.php">داشبورد اصلی</a></li></ul>
         <ul id="navigationBuilding"><li class="navigation-divider">مدیریت ساختمان</li><li><a href="buildings.php">ساختمان‌ها</a></li><li><a href="blocks.php">بلوک‌ها</a></li><li><a href="units.php">واحدها</a></li></ul>
         <ul id="navigationPeople"><li class="navigation-divider">افراد و قراردادها</li><li><a href="persons.php">اشخاص</a></li><li><a href="contracts.php">قراردادها</a></li></ul>
-        <ul id="navigationFinance"><li class="navigation-divider">مالی</li><li><a href="charges.php">شارژها</a></li></ul>
+        <ul id="navigationFinance"><li class="navigation-divider">مالی</li><li><a href="charges.php">شارژها</a></li><li><a href="users.php">کاربران</a></li></ul><ul id="navigationSystem"><li class="navigation-divider">مدیریت سیستم</li><li><a href="users.php">کاربران</a></li><li><a href="access_groups.php">گروه‌های دسترسی</a></li></ul>
     </div>
 </div>
 <div class="header">
