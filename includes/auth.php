@@ -40,6 +40,20 @@ function has_permission(string $resource, string $action='view'): bool {
     return (bool)$st->fetchColumn();
 }
 
+function require_page_permission(string $resource): void {
+    require_login();
+    $action='view';
+    if (isset($_GET['delete']) || (($_SERVER['REQUEST_METHOD'] ?? 'GET')==='POST' && post('action')==='delete')) {
+        $action='delete';
+    } elseif (($_SERVER['REQUEST_METHOD'] ?? 'GET')==='POST') {
+        $action=post('id') ? 'edit' : 'create';
+    }
+    if (!has_permission($resource,$action)) {
+        http_response_code(403);
+        exit('شما اجازه انجام این عملیات را ندارید.');
+    }
+}
+
 function require_permission(string $resource, string $action='view'): void {
     require_login();
     if (!has_permission($resource,$action)) {
