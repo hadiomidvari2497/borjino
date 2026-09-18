@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__.'/config.php';
-require_permission('blocks','view');
+require_page_permission('blocks');
 
 if (isset($_GET['delete'])) {
     $id=(int)$_GET['delete'];
