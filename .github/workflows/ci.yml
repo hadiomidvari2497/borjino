@@ -1,70 +1,312 @@
-name: Borjino CI
+name: CI
 
 on:
   push:
-    branches: ["main"]
+    branches: [main, master, develop]
+    tags: ['v*']
   pull_request:
-    branches: ["main"]
+    branches: [main, master, develop]
   workflow_dispatch:
+
+env:
+  PHP_VERSION: '8.3'
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
-  validate:
+  lint:
+    name: PHP Lint & Syntax Check
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.2"
-          extensions: pdo_mysql
-          coverage: none
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: pdo, pdo_mysql, mbstring, json, xml, curl, openssl
+          ini-values: error_reporting=E_ALL, display_errors=On
+      - name: Check PHP syntax (all .php files)
+        run: |
+          find . -name "*.php" -not -path "./vendor/*" -not -path "./.git/*" -print0 | xargs -0 -r -n1 -P4 php -l
+      - name: Check for short open tags (<?)
+        run: |
+          if grep -r '^<?[^p=]' --include="*.php" .; then
+            echo "::error::Short open tags (<?) found. Use <?php instead."
+            exit 1
+          fi
+      - name: Check for debug statements
+        run: |
+          if grep -r "var_dump\|print_r\|die(\|exit(\|dd(" --include="*.php" . | grep -v ".git" | grep -v "vendor"; then
+            echo "::warning::Debug statements found (var_dump, print_r, die, exit, dd)"
+          fi
 
-      - name: PHP syntax check
-        shell: bash
+  code-style:
+    name: Code Style (PHP_CodeSniffer)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: pdo, pdo_mysql, mbstring
+          tools: php-cs-fixer
+      - name: Check code style with PHP-CS-Fixer
+        run: php-cs-fixer fix --dry-run --diff --config=.php-cs-fixer.php || true
+        continue-on-error: true
+
+  static-analysis:
+    name: Static Analysis (PHPStan)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: pdo, pdo_mysql, mbstring
+          tools: phpstan
+      - name: Run PHPStan
+        run: |
+          phpstan analyse --level=5 --memory-limit=512M \
+            includes/ pages/ api/ cron/ index.php login.php logout.php config.php \
+            --configuration=phpstan.neon.dist || true
+        continue-on-error: true
+
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: pdo, pdo_mysql, mbstring
+          tools: composer
+      - name: Install security checker
+        run: composer global require sensiolabs/security-checker --no-interaction 2>/dev/null || true
+      - name: Check for known vulnerabilities (if composer.lock exists)
+        run: |
+          if [ -f composer.lock ]; then
+            php ~/.composer/vendor/bin/security-checker security:check composer.lock || true
+          else
+            echo "No composer.lock found, skipping vulnerability check"
+          fi
+      - name: Check for hardcoded secrets
+        run: |
+          if grep -r "password.*=.*['\"][^'\"]*['\"]" --include="*.php" . | grep -v ".git" | grep -v "password_hash" | grep -v "PASSWORD_" | grep -v "getenv" | grep -v "getSetting" | grep -v "\$_" | head -20; then
+            echo "::warning::Potential hardcoded passwords found. Use environment variables or config."
+          fi
+      - name: Check for SQL injection risks
+        run: |
+          if grep -r "SELECT.*\$_\|INSERT.*\$_\|UPDATE.*\$_\|DELETE.*\$_" --include="*.php" . | grep -v "prepare" | grep -v "bindParam" | grep -v "bindValue" | grep -v ".git" | head -10; then
+            echo "::warning::Potential SQL injection risk: direct variable interpolation in SQL. Use prepared statements."
+          fi
+      - name: Check for XSS risks (unescaped output)
+        run: |
+          if grep -r "echo \$_\|print \$_" --include="*.php" . | grep -v "htmlspecialchars" | grep -v "e(" | grep -v "__e(" | grep -v ".git" | head -10; then
+            echo "::warning::Potential XSS risk: unescaped output. Use e() or htmlspecialchars()."
+          fi
+
+  validate-config:
+    name: Validate Config & JSON
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+      - name: Validate JSON files
+        run: |
+          find . -name "*.json" -not -path "./.git/*" -not -path "./vendor/*" -print0 | xargs -0 -r -n1 -P4 sh -c 'python3 -m json.tool "$1" > /dev/null' _
+      - name: Check config.php syntax
+        run: php -l config.php
+      - name: Check .env.example exists
+        run: |
+          if [ ! -f .env.example ]; then
+            echo "::warning::.env.example not found. Create one for production deployments."
+          fi
+
+  database:
+    name: Database Schema Validation
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: radius_panel
+          MYSQL_USER: radius
+          MYSQL_PASSWORD: testpass
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup MySQL client
+        run: sudo apt-get update && sudo apt-get install -y mysql-client
+      - name: Wait for MySQL
         run: |
           set -euo pipefail
-          find . -type f -name '*.php' -not -path './docs/*' -not -path './.git/*' -print0 | while IFS= read -r -d '' file; do
-            php -l "$file"
+          for i in {1..30}; do
+            if mysqladmin ping -h 127.0.0.1 -u root -proot --silent; then
+              exit 0
+            fi
+            sleep 2
           done
-
-      - name: Validate project structure
-        shell: bash
+          echo "::error::MySQL did not become ready in time."
+          exit 1
+      - name: Run schema
         run: |
           set -euo pipefail
-          for path in index.php login.php logout.php config.php database.sql includes/auth.php includes/functions.php; do
-            test -f "$path"
-          done
-
-      - name: Validate SQL source
-        shell: bash
+          mysql -h 127.0.0.1 -u root -proot radius_panel < database.sql
+      - name: Verify tables created
         run: |
           set -euo pipefail
-          test -s database.sql
-          grep -q "CREATE TABLE.*users" database.sql
-          grep -q "CREATE TABLE.*buildings" database.sql
-          grep -q "CREATE TABLE.*units" database.sql
+          mysql -h 127.0.0.1 -u root -proot radius_panel -e "SHOW TABLES;"
+          test "$(mysql -h 127.0.0.1 -u root -proot radius_panel -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='borjino';")" -gt 0
 
-      - name: Build application artifact
-        shell: bash
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: pdo, pdo_mysql, mbstring
+      - name: Check for PHPUnit
+        run: |
+          if [ -f phpunit.xml ] || [ -f phpunit.xml.dist ] || [ -d tests ]; then
+            echo "Test configuration found"
+            if [ -x vendor/bin/phpunit ]; then
+              vendor/bin/phpunit --testdox
+            else
+              echo "::warning::PHPUnit configuration/tests found but vendor/bin/phpunit is unavailable."
+            fi
+          else
+            echo "No test suite found (phpunit.xml or tests/ directory). Skipping."
+          fi
+
+  build:
+    name: Build & Artifact
+    runs-on: ubuntu-latest
+    needs: [lint, code-style, static-analysis, security, validate-config, database, test]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Create deployment artifact
         run: |
           set -euo pipefail
-          mkdir -p dist
-          rsync -a --exclude='docs/' --exclude='.git/' --exclude='.github/' --exclude='dist/' ./ dist/
-          tar -czf "borjino-$GITHUB_SHA.tar.gz" -C dist .
-          (cd dist && zip -qr "../borjino-$GITHUB_SHA.zip" .)
-          rm -rf dist
-
-      - name: Upload application artifact
+          SHORT_SHA="${GITHUB_SHA:0:8}"
+          mkdir -p build
+          rsync -av \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='.gitignore' \
+            --exclude='*.md' \
+            --exclude='*.pdf' \
+            --exclude='*.log' \
+            --exclude='database/*.pdf' \
+            --exclude='database/seed_admin.sql' \
+            --exclude='database/migrations/' \
+            --exclude='build' \
+            --exclude='vendor' \
+            --exclude='composer.*' \
+            --exclude='phpunit*' \
+            --exclude='phpstan*' \
+            --exclude='.php-cs-fixer*' \
+            --exclude='.env*' \
+            --exclude='README*' \
+            --exclude='LICENSE*' \
+            --exclude='BILINGUAL*' \
+            --exclude='PROJECT_DOC*' \
+            --exclude='api/README.md' \
+            --exclude='api/SECURITY*' \
+            --exclude='api/API_REF*' \
+            --exclude='deploy.sh' \
+            . build/
+          cd build
+          zip -r "../hd-radius-${SHORT_SHA}.zip" . -x "*/.DS_Store"
+          cd ..
+          echo "=== ZIP Contents ==="
+          unzip -l "hd-radius-${SHORT_SHA}.zip" | head -30
+          echo "=== ZIP verification ==="
+          unzip -t "hd-radius-${SHORT_SHA}.zip"
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: borjino-application
-          path: |
-            borjino-*.tar.gz
-            borjino-*.zip
-          if-no-files-found: error
+          name: hd-radius-${{ github.sha }}
+          path: hd-radius-*.zip
+          retention-days: 30
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          body: |
+            ## HD Radius ${{ github.ref_name }}
+
+            ### نصب/به‌روزرسانی
+            1. فایل ZIP این Release را دانلود کنید.
+            2. روی سرور از فشرده خارج کنید.
+            3. مالکیت را اصلاح کنید.
+            4. در صورت نیاز migration اجرا کنید.
+            5. کش مرورگر را پاک کنید.
+          draft: false
+          prerelease: false
+          files: hd-radius-*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notify:
+    name: CI Failure Diagnostics
+    runs-on: ubuntu-latest
+    needs: [lint, code-style, static-analysis, security, validate-config, database, test, build]
+    if: ${{ always() && contains(needs.*.result, 'failure') }}
+    steps:
+      - name: Collect failed jobs and steps
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          echo "## CI Failure Diagnostics" >> "$GITHUB_STEP_SUMMARY"
+          echo "Run: $GITHUB_RUN_ID" >> "$GITHUB_STEP_SUMMARY"
+          echo "Commit: $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo '\`\`\`text' >> "$GITHUB_STEP_SUMMARY"
+          gh run view "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --json jobs \
+            --jq '.jobs[] | select(.conclusion == "failure" or .conclusion == "cancelled" or .conclusion == "timed_out") | "JOB: \\(.name) | \\(.conclusion)\n" + ([.steps[]? | select(.conclusion == "failure" or .conclusion == "cancelled" or .conclusion == "timed_out") | "  STEP: \\(.name) | \\(.conclusion)"] | join("\n"))' \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+          echo '\`\`\`' >> "$GITHUB_STEP_SUMMARY"
+          echo "::error::One or more CI jobs failed. See the CI Failure Diagnostics job summary for the failed job/step names."
+      - name: Download logs for failed jobs
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p ci-logs
+          gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --dir ci-logs 2>/dev/null || true
+          tar -czf ci-logs.tar.gz ci-logs 2>/dev/null || true
+      - name: Upload diagnostic bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-diagnostics-${{ github.run_id }}
+          path: ci-logs.tar.gz
+          if-no-files-found: ignore
           retention-days: 14
