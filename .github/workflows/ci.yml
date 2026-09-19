@@ -144,8 +144,8 @@ jobs:
         image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: radius_panel
-          MYSQL_USER: radius
+          MYSQL_DATABASE: borjino
+          MYSQL_USER: borjino
           MYSQL_PASSWORD: testpass
         ports:
           - 3306:3306
@@ -169,12 +169,12 @@ jobs:
       - name: Run schema
         run: |
           set -euo pipefail
-          mysql -h 127.0.0.1 -u root -proot radius_panel < database.sql
+          mysql -h 127.0.0.1 -u root -proot borjino < database.sql
       - name: Verify tables created
         run: |
           set -euo pipefail
-          mysql -h 127.0.0.1 -u root -proot radius_panel -e "SHOW TABLES;"
-          test "$(mysql -h 127.0.0.1 -u root -proot radius_panel -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='borjino';")" -gt 0
+          mysql -h 127.0.0.1 -u root -proot borjino -e "SHOW TABLES;"
+          test "$(mysql -h 127.0.0.1 -u root -proot borjino -N -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='borjino';")" -gt 0
 
   test:
     name: Tests
