@@ -182,10 +182,10 @@ function calculate_unit_charge(PDO $pdo, array $unit, string $period, ?array $se
     }
 
     $st = $pdo->prepare(
-        'SELECT * FROM costs
+        "SELECT * FROM costs
          WHERE building_id=? AND cost_type IN ('fixed','variable')
            AND (period IS NULL OR period=?)
-         ORDER BY id'
+         ORDER BY id"
     );
     $st->execute([(int)$unit['building_id'], $period]);
     $costs = $st->fetchAll();
