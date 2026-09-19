@@ -68,9 +68,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     redirect('charges.php');
 }
 
-if (isset($_GET['delete'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('action') === 'delete') {
     check_csrf();
-    $id = (int)$_GET['delete'];
+    $id = (int)post('id');
     $st = $pdo->prepare('DELETE FROM charges WHERE id=?');
     $st->execute([$id]);
     log_activity('delete', 'charges', $id, 'حذف شارژ');
@@ -142,7 +142,7 @@ page_header('صدور شارژ');
                         <td><?=e($r['due_date'] ?? '-')?></td>
                         <td><?=e($r['status'])?></td>
                         <td>
-                            <a class="btn btn-sm btn-outline-danger" href="charges.php?delete=<?=$r['id']?>&csrf_token=<?=e(csrf_token())?>" onclick="return confirm('حذف شود؟')">حذف</a>
+                            <form method="post" style="display:inline" onsubmit="return confirm('حذف شود؟')"><?=csrf_field()?><input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="<?=$r['id']?>"><button class="btn btn-sm btn-outline-danger" type="submit">حذف</button></form>
                         </td>
                     </tr>
                 <?php endforeach; ?>
