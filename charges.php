@@ -1,5 +1,154 @@
 <?php
-require_once __DIR__.'/config.php'; require_page_permission('charges'); require_once __DIR__.'/includes/charge_engine.php';
-if($_SERVER['REQUEST_METHOD']==='POST'){check_csrf();$unit=(int)post('unit_id');$pdo->prepare('INSERT INTO charges(unit_id,title,period,amount,due_date,status,notes) VALUES(?,?,?,?,?,?,?)')->execute([$unit,trim(post('title')),trim(post('period')), (float)post('amount',0),post('due_date')?:null,'unpaid',trim(post('notes'))?:null]);flash('شارژ ثبت شد.');redirect('charges.php');}
-if(isset($_GET['delete'])){$pdo->prepare('DELETE FROM charges WHERE id=?')->execute([(int)$_GET['delete']]);flash('شارژ حذف شد.');redirect('charges.php');}$units=$pdo->query('SELECT id,unit_no FROM units ORDER BY unit_no')->fetchAll();$rows=$pdo->query('SELECT c.*,u.unit_no FROM charges c JOIN units u ON u.id=c.unit_id ORDER BY c.id DESC')->fetchAll();page_header('شارژ');
-?><div class="toolbar"><h1>شارژ واحدها</h1></div><form class="form" method="post"><?=csrf_field()?><div class="grid"><label>واحد<select name="unit_id" required><?php foreach($units as $u):?><option value="<?=$u['id']?>">واحد <?=e($u['unit_no'])?></option><?php endforeach;?></select></label><label>عنوان<input name="title" required placeholder="شارژ ماهانه"></label><label>دوره<input name="period" required placeholder="1405-06"></label><label>مبلغ<input type="number" step="0.01" name="amount" required></label><label>سررسید<input type="date" name="due_date"></label><label style="grid-column:1/-1">توضیحات<textarea name="notes"></textarea></label></div><div class="actions"><button>ثبت شارژ</button></div></form><h2>لیست شارژها</h2><div class="table-wrap"><table class="table"><tr><th>واحد</th><th>عنوان</th><th>دوره</th><th>مبلغ</th><th>سررسید</th><th>وضعیت</th><th>عملیات</th></tr><?php foreach($rows as $r):?><tr><td><?=e($r['unit_no'])?></td><td><?=e($r['title'])?></td><td><?=e($r['period'])?></td><td><?=money($r['amount'])?></td><td><?=$r['due_date']?></td><td><?=e($r['status'])?></td><td><a class="button danger" onclick="return confirm('حذف شود؟')" href="charges.php?delete=<?=$r['id']?>">حذف</a></td></tr><?php endforeach;?></table></div><?php page_footer();?>
+require_once __DIR__ . '/config.php';
+require_page_permission('charges');
+require_once __DIR__ . '/includes/charge_engine.php';
+
+$settings = get_charge_settings($pdo);
+$units = $pdo->query(
+    'SELECT id, building_id, unit_no, area, parking_count, storage_count
+     FROM units ORDER BY building_id, block_id, unit_no'
+)->fetchAll();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    check_csrf();
+    $action = post('action');
+    $period = trim(post('period'));
+    $title = trim(post('title')) ?: 'شارژ ماهانه';
+    $dueDate = post('due_date') ?: null;
+
+    try {
+        charge_period_parts($period);
+
+        if ($action !== 'issue') {
+            throw new RuntimeException('عملیات نامعتبر است.');
+        }
+        if (!$units) {
+            throw new RuntimeException('هیچ واحدی برای صدور شارژ وجود ندارد.');
+        }
+
+        $pdo->beginTransaction();
+        $insert = $pdo->prepare(
+            'INSERT INTO charges
+             (unit_id,title,period,amount,calculation_method,calculation_details,due_date,status,notes)
+             VALUES (?,?,?,?,?,?,?,'unpaid',NULL)'
+        );
+
+        $issued = 0;
+        $skipped = 0;
+        foreach ($units as $unit) {
+            $exists = $pdo->prepare('SELECT id FROM charges WHERE unit_id=? AND period=? LIMIT 1');
+            $exists->execute([(int)$unit['id'], $period]);
+            if ($exists->fetchColumn()) {
+                $skipped++;
+                continue;
+            }
+
+            $calculation = calculate_unit_charge($pdo, $unit, $period, $settings);
+            $insert->execute([
+                (int)$unit['id'],
+                $title,
+                $period,
+                $calculation['amount'],
+                $calculation['method'],
+                json_encode($calculation['details'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                $dueDate
+            ]);
+            $issued++;
+        }
+
+        $pdo->commit();
+        log_activity('create', 'charges', null, sprintf('صدور شارژ دوره %s: %d صادر، %d قبلی', $period, $issued, $skipped));
+        flash(sprintf('صدور شارژ انجام شد؛ %d مورد صادر شد و %d مورد از قبل وجود داشت.', $issued, $skipped));
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        flash('صدور شارژ انجام نشد: ' . $e->getMessage());
+    }
+    redirect('charges.php');
+}
+
+if (isset($_GET['delete'])) {
+    check_csrf();
+    $id = (int)$_GET['delete'];
+    $st = $pdo->prepare('DELETE FROM charges WHERE id=?');
+    $st->execute([$id]);
+    log_activity('delete', 'charges', $id, 'حذف شارژ');
+    flash('شارژ حذف شد.');
+    redirect('charges.php');
+}
+
+$rows = $pdo->query(
+    'SELECT c.*, u.unit_no, b.name AS building_name
+     FROM charges c
+     JOIN units u ON u.id=c.unit_id
+     JOIN buildings b ON b.id=u.building_id
+     ORDER BY c.id DESC'
+)->fetchAll();
+
+page_header('صدور شارژ');
+?>
+<div class="content-header mb-4">
+    <div>
+        <h4 class="mb-1">صدور شارژ</h4>
+        <p class="text-muted mb-0">مبلغ هر واحد از روش انتخاب‌شده در تنظیمات شارژ محاسبه می‌شود.</p>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="post">
+            <?=csrf_field()?>
+            <input type="hidden" name="action" value="issue">
+            <div class="row">
+                <div class="col-md-4 form-group">
+                    <label>دوره شارژ</label>
+                    <input class="form-control" name="period" required pattern="[0-9]{4}-[0-9]{2}" placeholder="YYYY-MM">
+                </div>
+                <div class="col-md-4 form-group">
+                    <label>عنوان</label>
+                    <input class="form-control" name="title" value="شارژ ماهانه" required>
+                </div>
+                <div class="col-md-4 form-group">
+                    <label>سررسید</label>
+                    <input class="form-control" type="date" name="due_date">
+                </div>
+            </div>
+            <div class="alert alert-info">
+                روش فعال:
+                <strong><?=e($settings['calculation_method'].' - '.charge_methods()[(int)$settings['calculation_method']])?></strong>
+            </div>
+            <button class="btn btn-primary" type="submit" onclick="return confirm('برای تمام واحدهای فاقد شارژ این دوره، شارژ صادر شود؟')">
+                صدور شارژ
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">شارژهای صادرشده</h5>
+        <div class="table-responsive">
+            <table class="table">
+                <thead><tr><th>ساختمان</th><th>واحد</th><th>دوره</th><th>روش</th><th>مبلغ</th><th>سررسید</th><th>وضعیت</th><th>عملیات</th></tr></thead>
+                <tbody>
+                <?php foreach ($rows as $r): ?>
+                    <tr>
+                        <td><?=e($r['building_name'])?></td>
+                        <td><?=e($r['unit_no'])?></td>
+                        <td><?=e($r['period'])?></td>
+                        <td><?=e(charge_methods()[(int)$r['calculation_method']] ?? '-')?></td>
+                        <td><?=money($r['amount'])?></td>
+                        <td><?=e($r['due_date'] ?? '-')?></td>
+                        <td><?=e($r['status'])?></td>
+                        <td>
+                            <a class="btn btn-sm btn-outline-danger" href="charges.php?delete=<?=$r['id']?>&csrf_token=<?=e(csrf_token())?>" onclick="return confirm('حذف شود؟')">حذف</a>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<?php page_footer(); ?>
