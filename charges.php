@@ -28,9 +28,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $pdo->beginTransaction();
         $insert = $pdo->prepare(
-            'INSERT INTO charges
+            "INSERT INTO charges
              (unit_id,title,period,amount,calculation_method,calculation_details,due_date,status,notes)
-             "VALUES (?,?,?,?,?,?,?,'unpaid',NULL)"
+             VALUES (?,?,?,?,?,?,?,'unpaid',NULL)"
         );
 
         $issued = 0;
