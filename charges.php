@@ -12,16 +12,36 @@ $units = $pdo->query(
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     check_csrf();
     $action = post('action');
-    $period = trim(post('period'));
-    $title = trim(post('title')) ?: 'شارژ ماهانه';
-    $dueDate = post('due_date') ?: null;
+
+    if ($action === 'delete') {
+        require_permission('charges', 'delete');
+        $id = (int)post('id');
+        if ($id <= 0) {
+            flash('شناسه شارژ نامعتبر است.');
+            redirect('charges.php');
+        }
+
+        $st = $pdo->prepare('DELETE FROM charges WHERE id=?');
+        $st->execute([$id]);
+        log_activity('delete', 'charges', $id, 'حذف شارژ');
+        flash('شارژ حذف شد.');
+        redirect('charges.php');
+    }
+
+    if ($action !== 'issue') {
+        flash('عملیات نامعتبر است.');
+        redirect('charges.php');
+    }
 
     try {
+        require_permission('charges', 'create');
+
+        $period = trim(post('period'));
+        $title = trim(post('title')) ?: 'شارژ ماهانه';
+        $dueDate = post('due_date') ?: null;
+
         charge_period_parts($period);
 
-        if ($action !== 'issue') {
-            throw new RuntimeException('عملیات نامعتبر است.');
-        }
         if (!$units) {
             throw new RuntimeException('هیچ واحدی برای صدور شارژ وجود ندارد.');
         }
@@ -65,16 +85,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         flash('صدور شارژ انجام نشد: ' . $e->getMessage());
     }
-    redirect('charges.php');
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('action') === 'delete') {
-    check_csrf();
-    $id = (int)post('id');
-    $st = $pdo->prepare('DELETE FROM charges WHERE id=?');
-    $st->execute([$id]);
-    log_activity('delete', 'charges', $id, 'حذف شارژ');
-    flash('شارژ حذف شد.');
     redirect('charges.php');
 }
 
