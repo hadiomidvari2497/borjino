@@ -51,7 +51,7 @@ CROSS JOIN (
  SELECT 'dashboard' resource UNION ALL SELECT 'buildings' UNION ALL SELECT 'blocks'
  UNION ALL SELECT 'units' UNION ALL SELECT 'persons' UNION ALL SELECT 'memberships'
  UNION ALL SELECT 'personnel' UNION ALL SELECT 'contracts' UNION ALL SELECT 'costs'
- UNION ALL SELECT 'charges' UNION ALL SELECT 'payments' UNION ALL SELECT 'reports'
+ UNION ALL SELECT 'charges' UNION ALL SELECT 'charge_settings' UNION ALL SELECT 'payments' UNION ALL SELECT 'reports'
  UNION ALL SELECT 'users' UNION ALL SELECT 'access_groups' UNION ALL SELECT 'settings'
 ) r
 WHERE g.name='administrators'
