@@ -23,7 +23,7 @@ function get_charge_settings(PDO $pdo): array {
     return $row;
 }
 
-function charge_period_parts(string $period): array {
+function charge_period_bounds(string $period): array {
     if (!preg_match('/^(\d{4})-(\d{2})$/', $period, $m)) {
         throw new InvalidArgumentException('دوره شارژ باید به شکل YYYY-MM باشد.');
     }
@@ -32,14 +32,17 @@ function charge_period_parts(string $period): array {
     if ($month < 1 || $month > 12) {
         throw new InvalidArgumentException('ماه دوره شارژ نامعتبر است.');
     }
-    return [$year, $month];
+    $start = sprintf('%04d-%02d-01', $year, $month);
+    return [$start, date('Y-m-t', strtotime($start))];
+}
+
+function charge_period_parts(string $period): array {
+    [$start, $end] = charge_period_bounds($period);
+    return [(int)date('Y', strtotime($start)), (int)date('m', strtotime($start))];
 }
 
 function charge_resident_count(PDO $pdo, int $unitId, string $period): int {
-    [$year, $month] = charge_period_parts($period);
-    // Charge periods are stored as Gregorian YYYY-MM in the current data model.
-    $start = sprintf('%04d-%02d-01', $year, $month);
-    $end = date('Y-m-t', strtotime($start));
+    [$start, $end] = charge_period_bounds($period);
     $st = $pdo->prepare(
         'SELECT COUNT(*) FROM memberships
          WHERE unit_id=?
@@ -180,22 +183,26 @@ function calculate_unit_charge(PDO $pdo, array $unit, string $period, ?array $se
 
     $st = $pdo->prepare(
         'SELECT * FROM costs
-         WHERE building_id=? AND cost_type=? AND (period IS NULL OR period=?)
+         WHERE building_id=? AND cost_type IN ('fixed','variable')
+           AND (period IS NULL OR period=?)
          ORDER BY id'
     );
-    $st->execute([(int)$unit['building_id'], 'variable', $period]);
+    $st->execute([(int)$unit['building_id'], $period]);
     $costs = $st->fetchAll();
 
     $stA = $pdo->prepare('SELECT COALESCE(SUM(area),0) FROM units WHERE building_id=?');
     $stA->execute([(int)$unit['building_id']]);
     $totalArea = (float)$stA->fetchColumn();
 
+    [$periodStart, $periodEnd] = charge_period_bounds($period);
     $stP = $pdo->prepare(
         'SELECT COUNT(*) FROM memberships m
          JOIN units u ON u.id=m.unit_id
-         WHERE u.building_id=?'
+         WHERE u.building_id=?
+           AND (m.start_date IS NULL OR m.start_date<=?)
+           AND (m.end_date IS NULL OR m.end_date>=?)'
     );
-    $stP->execute([(int)$unit['building_id']]);
+    $stP->execute([(int)$unit['building_id'], $periodEnd, $periodStart]);
     $totalPersons = (int)$stP->fetchColumn();
 
     $stU = $pdo->prepare('SELECT COUNT(*) FROM units WHERE building_id=?');
