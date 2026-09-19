@@ -1,0 +1,32 @@
+/* Borjino UI layer - keeps the existing Nextable shell while adding a consistent Persian admin experience. */
+:root{--borjino-primary:#5867dd;--borjino-primary-dark:#4654c7;--borjino-bg:#f5f7fb;--borjino-text:#263238;--borjino-muted:#8492a6;--borjino-border:#e7eaf0;--borjino-radius:14px}
+html,body{font-family:Tahoma,"Vazirmatn","Segoe UI",sans-serif}
+body{background:var(--borjino-bg);color:var(--borjino-text)}
+.header{box-shadow:0 2px 14px rgba(31,45,61,.06);border-bottom:1px solid var(--borjino-border)}
+.header-logo{background:#fff}
+.header-logo img{object-fit:contain}
+.page-title{font-weight:700}
+.breadcrumb{background:transparent;margin-bottom:0}
+.main-content{padding-top:30px;padding-bottom:40px}
+.main-content>.alert{border-radius:12px;border:0;box-shadow:0 4px 18px rgba(31,45,61,.05)}
+.card{border:1px solid var(--borjino-border);border-radius:var(--borjino-radius);box-shadow:0 5px 20px rgba(31,45,61,.04);overflow:hidden}
+.card-header{font-weight:700;background:#fff;border-bottom:1px solid var(--borjino-border);padding:18px 20px}
+.card-body{padding:20px}
+.table{margin-bottom:0}
+.table thead th{font-size:12px;font-weight:700;color:#667085;background:#fafbfc;border-bottom:1px solid var(--borjino-border)}
+.table td{vertical-align:middle}
+.btn{border-radius:9px;font-weight:600}
+.btn-primary{background:var(--borjino-primary);border-color:var(--borjino-primary)}
+.btn-primary:hover,.btn-primary:focus{background:var(--borjino-primary-dark);border-color:var(--borjino-primary-dark)}
+.form-control,.custom-select{border-radius:9px;border-color:#dfe3ea;min-height:42px}
+.form-control:focus,.custom-select:focus{border-color:var(--borjino-primary);box-shadow:0 0 0 .15rem rgba(88,103,221,.12)}
+.navigation-menu-body>ul>li>a{border-radius:8px;margin:2px 10px;padding:9px 12px}
+.navigation-menu-body>ul>li>a:hover,.navigation-menu-body>ul>li>a.active{background:rgba(88,103,221,.09);color:var(--borjino-primary)}
+.navigation-divider{font-weight:800;color:#667085}
+.icon-block{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.borjino-kpi{transition:transform .18s ease,box-shadow .18s ease}
+.borjino-kpi:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(31,45,61,.09)}
+.borjino-kpi .kpi-value{font-size:25px;font-weight:800}
+.borjino-section-title{font-size:16px;font-weight:800;margin:0}
+@media(max-width:991px){.main-content{padding:20px 15px 30px}.header-body-left .breadcrumb{display:none}.header-body-left{display:flex;align-items:center}.page-title{font-size:17px}}
+@media(max-width:575px){.main-content{padding:15px 10px 25px}.card-body{padding:15px}.header-body-right{display:none}.table-responsive{border:0}.btn{font-size:12px}}
