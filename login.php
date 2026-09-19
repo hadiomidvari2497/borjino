@@ -23,15 +23,15 @@ $tpl='https://raw.githubusercontent.com/parhamIH/Vira-online-shop/main/frontend/
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>ورود - برجینو</title>
-    <link rel="shortcut icon" href="<?= $tpl ?>assets/media/image/favicon.png">
+    <link rel="shortcut icon" href="assets/media/image/favicon.svg">
     <meta name="theme-color" content="#5867dd">
-    <link rel="stylesheet" href="<?= $tpl ?>vendors/bundle.css" type="text/css">
-    <link rel="stylesheet" href="<?= $tpl ?>assets/css/app.css" type="text/css">
+    <link rel="stylesheet" href="assets/css/vendor/bundle.css" type="text/css">
+    <link rel="stylesheet" href="assets/css/app.css" type="text/css">
 </head>
 <body class="form-membership">
 <div class="page-loader"><div class="spinner-border"></div></div>
 <div class="form-wrapper">
-    <div class="logo"><img src="<?= $tpl ?>assets/media/image/logo-sm.png" alt="برجینو"></div>
+    <div class="logo"><img src="assets/media/image/logo.svg" alt="برجینو"></div>
     <h5>ورود به برجینو</h5>
     <?php if ($error): ?><div class="alert alert-danger"><?= e($error) ?></div><?php endif; ?>
     <form method="post" action="login.php">
@@ -44,7 +44,7 @@ $tpl='https://raw.githubusercontent.com/parhamIH/Vira-online-shop/main/frontend/
         <button type="submit" class="btn btn-primary btn-block">ورود</button>
     </form>
 </div>
-<script src="<?= $tpl ?>vendors/bundle.js"></script>
-<script src="<?= $tpl ?>assets/js/app.js"></script>
+<script src="assets/js/vendor/bundle.js"></script>
+<script src="assets/js/app.js"></script>
 </body>
 </html>
