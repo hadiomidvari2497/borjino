@@ -42,7 +42,7 @@ function page_header(string $title='برجینو'): void {
         <ul id="navigationDashboards" class="navigation-active"><li class="navigation-divider">داشبورد</li><li><a class="active" href="index.php">داشبورد اصلی</a></li></ul>
         <ul id="navigationBuilding"><li class="navigation-divider">مدیریت ساختمان</li><li><a href="buildings.php">ساختمان‌ها</a></li><li><a href="blocks.php">بلوک‌ها</a></li><li><a href="units.php">واحدها</a></li></ul>
         <ul id="navigationPeople"><li class="navigation-divider">مدیریت افراد</li><li><a href="personnel.php">پرسنل</a></li><li><a href="persons.php">اعضا</a></li><li><a href="memberships.php">عضویت‌ها</a></li><li><a href="contracts.php">قراردادها</a></li></ul>
-        <ul id="navigationFinance"><li class="navigation-divider">امور مالی</li><li><a href="costs.php">هزینه‌ها</a></li><li><a href="charges.php">شارژها</a></li><li><a href="payments.php">پرداخت‌ها</a></li></ul><ul id="navigationSystem"><li class="navigation-divider">مدیریت سیستم</li><li><a href="users.php">کاربران</a></li><li><a href="access_groups.php">گروه‌های دسترسی</a></li></ul>
+        <ul id="navigationFinance"><li class="navigation-divider">امور مالی</li><li><a href="costs.php">هزینه‌ها</a></li><li><a href="charges.php">شارژها</a></li><li><a href="payments.php">پرداخت‌ها</a></li><li><a href="charge_settings.php">تنظیمات شارژ</a></li></ul><ul id="navigationSystem"><li class="navigation-divider">مدیریت سیستم</li><li><a href="users.php">کاربران</a></li><li><a href="access_groups.php">گروه‌های دسترسی</a></li></ul>
     </div>
 </div>
 <div class="header">
