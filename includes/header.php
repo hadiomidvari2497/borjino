@@ -3,7 +3,7 @@ function page_header(string $title='برجینو'): void {
     $u = current_user();
     $f = flash();
     $page_title = $title;
-    $tpl = 'https://raw.githubusercontent.com/parhamIH/Vira-online-shop/main/frontend/templateAdmin/';
+    $tpl = 'assets/';
 
     $menu = [
         'dashboard' => [
@@ -62,11 +62,12 @@ function page_header(string $title='برجینو'): void {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title><?= e($page_title) ?> - برجینو</title>
-    <link rel="shortcut icon" href="<?= $tpl ?>assets/media/image/favicon.png">
+    <link rel="shortcut icon" href="assets/media/image/favicon.svg">
     <meta name="theme-color" content="#5867dd">
-    <link rel="stylesheet" href="<?= $tpl ?>vendors/bundle.css" type="text/css">
-    <link rel="stylesheet" href="<?= $tpl ?>assets/css/app.css" type="text/css">
+    <link rel="stylesheet" href="assets/css/vendor/bundle.css" type="text/css">
+    <link rel="stylesheet" href="assets/css/app.css" type="text/css">
     <link rel="stylesheet" href="assets/css/borjino.css" type="text/css">
+    <link rel="stylesheet" href="assets/css/themify-icons.css" type="text/css">
 </head>
 <body>
 <div class="page-loader"><div class="spinner-border"></div></div>
@@ -74,7 +75,7 @@ function page_header(string $title='برجینو'): void {
 <div class="sidebar" id="userProfile">
     <div class="text-center p-4">
         <figure class="avatar avatar-state-success avatar-lg mb-4">
-            <img src="<?= $tpl ?>assets/media/image/avatar.jpg" class="rounded-circle" alt="پروفایل">
+            <img src="assets/media/image/avatar.svg" class="rounded-circle" alt="پروفایل">
         </figure>
         <h4 class="text-primary m-b-10"><?= e($u['full_name'] ?? 'کاربر سامانه') ?></h4>
         <p class="text-muted mb-0"><?= e($u['username'] ?? '') ?></p>
@@ -126,9 +127,9 @@ function page_header(string $title='برجینو'): void {
 <div class="header">
     <div class="header-logo">
         <a href="index.php">
-            <img class="large-logo" src="<?= $tpl ?>assets/media/image/logo.png" alt="برجینو">
-            <img class="small-logo" src="<?= $tpl ?>assets/media/image/logo-sm.png" alt="برجینو">
-            <img class="dark-logo" src="<?= $tpl ?>assets/media/image/logo-dark.png" alt="برجینو">
+            <img class="large-logo" src="assets/media/image/logo.svg" alt="برجینو">
+            <img class="small-logo" src="assets/media/image/logo.svg" alt="برجینو">
+            <img class="dark-logo" src="assets/media/image/logo.svg" alt="برجینو">
         </a>
     </div>
     <div class="header-body">
@@ -164,8 +165,8 @@ function page_header(string $title='برجینو'): void {
 function page_footer(): void {
 ?>
 </div>
-<script src="https://raw.githubusercontent.com/parhamIH/Vira-online-shop/main/frontend/templateAdmin/vendors/bundle.js"></script>
-<script src="https://raw.githubusercontent.com/parhamIH/Vira-online-shop/main/frontend/templateAdmin/assets/js/app.js"></script>
+<script src="assets/js/vendor/bundle.js"></script>
+<script src="assets/js/app.js"></script>
 <div class="colors">
     <div class="bg-primary"></div><div class="bg-primary-bright"></div>
     <div class="bg-secondary"></div><div class="bg-secondary-bright"></div>
