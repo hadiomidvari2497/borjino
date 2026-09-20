@@ -89,7 +89,18 @@ function page_header(string $title='برجینو'): void {
     </div>
     <hr class="m-0">
     <div class="p-4">
-        <p class="text-muted mb-0">مدیریت ساختمان، ساکنان و امور مالی</p>
+        <div class="mb-4">
+            <h6 class="small mb-2">وضعیت حساب</h6>
+            <div class="progress"><div class="progress-bar" style="width:100%"></div></div>
+        </div>
+        <div class="mb-4">
+            <h6 class="small mb-2">سامانه</h6>
+            <p class="text-muted mb-0">مدیریت ساختمان، واحدها، ساکنان و امور مالی</p>
+        </div>
+        <div>
+            <h6 class="small mb-2">دسترسی</h6>
+            <p class="text-muted mb-0">سطح دسترسی شما بر اساس گروه کاربری کنترل می‌شود.</p>
+        </div>
     </div>
 </div>
 
