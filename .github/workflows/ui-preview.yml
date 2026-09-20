@@ -55,7 +55,6 @@ jobs:
         run: |
           mkdir -p .ui-preview-site/assets
           cp -R assets/. .ui-preview-site/assets/
-          printf '%s\n' '<!doctype html><html lang="fa" dir="rtl"><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=index.html"><title>برجینو</title><body>در حال انتقال...</body></html>' > .ui-preview-site/index.html
           touch .ui-preview-site/.nojekyll
       - name: Start PHP preview server
         run: |
