@@ -4,12 +4,19 @@ declare(strict_types=1);
 $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 $root = dirname(__DIR__);
 
-if ($uri !== '/' && is_file($root . $uri)) {
+/*
+ * Let GitHub Pages/static assets pass through, but intercept PHP page requests
+ * so the preview session below is available before the application executes.
+ */
+$isPhpRequest = str_ends_with(strtolower($uri), '.php');
+if ($uri !== '/' && !$isPhpRequest && is_file($root . $uri)) {
     return false;
 }
 
-session_save_path(sys_get_temp_dir());
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_save_path(sys_get_temp_dir());
+    session_start();
+}
 
 $_SESSION['user'] = [
     'id' => 1,
