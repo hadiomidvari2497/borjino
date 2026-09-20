@@ -1,0 +1,115 @@
+name: UI Preview - GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  actions: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build static UI preview
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+          MYSQL_DATABASE: borjino
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo, pdo_mysql, mbstring, json, xml, curl, openssl
+      - name: Install MySQL client
+        run: sudo apt-get update && sudo apt-get install -y mysql-client
+      - name: Wait for MySQL
+        run: |
+          for i in {1..30}; do
+            if mysqladmin ping -h 127.0.0.1 -u root --silent; then exit 0; fi
+            sleep 2
+          done
+          exit 1
+      - name: Import application schema
+        run: mysql -h 127.0.0.1 -u root borjino < database.sql
+      - name: Prepare preview site
+        run: |
+          mkdir -p .ui-preview-site/assets
+          cp -R assets/. .ui-preview-site/assets/
+          printf '%s\n' '<!doctype html><html lang="fa" dir="rtl"><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=index.html"><title>برجینو</title><body>در حال انتقال...</body></html>' > .ui-preview-site/index.html
+          touch .ui-preview-site/.nojekyll
+      - name: Start PHP preview server
+        run: |
+          php -S 127.0.0.1:8080 -t . preview/router.php > /tmp/borjino-preview.log 2>&1 &
+          echo $! > /tmp/borjino-preview.pid
+          sleep 2
+      - name: Render authenticated pages
+        run: |
+          set -euo pipefail
+          pages=(index buildings blocks units personnel persons memberships contracts costs charges payments reports charge_settings users access_groups)
+          for page in "${pages[@]}"; do
+            echo "Rendering $page.php"
+            curl --fail --silent --show-error "http://127.0.0.1:8080/$page.php" -o ".ui-preview-site/$page.html"
+          done
+      - name: Verify reference HTML is excluded
+        run: |
+          set -euo pipefail
+          if find .ui-preview-site -type f \( -path '*/docs/design-reference/nextable-html-source/*' -o -name '*.php' -o -name '*.zip' \) | grep -q .; then
+            echo "::error::Reference HTML/PHP/ZIP files leaked into UI preview."
+            exit 1
+          fi
+          test -f .ui-preview-site/index.html
+          test -f .ui-preview-site/buildings.html
+          test -f .ui-preview-site/units.html
+      - name: Write preview metadata
+        run: |
+          cat > .ui-preview-site/preview-meta.json <<EOF
+          {
+            "project": "Borjino",
+            "commit": "${GITHUB_SHA}",
+            "source": "GitHub main",
+            "reference_html_excluded": true
+          }
+          EOF
+      - name: Stop preview server
+        if: always()
+        run: |
+          if [ -f /tmp/borjino-preview.pid ]; then kill "$(cat /tmp/borjino-preview.pid)" || true; fi
+          cat /tmp/borjino-preview.log || true
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: .ui-preview-site
+
+  deploy:
+    name: Deploy UI preview
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
