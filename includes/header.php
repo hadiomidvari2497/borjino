@@ -40,6 +40,13 @@ function page_header(string $title='برجینو'): void {
                 ['charge_settings','view','charge_settings.php','تنظیمات شارژ'],
             ]
         ],
+        'reports' => [
+            'title'=>'گزارش‌ها',
+            'icon'=>'ti-bar-chart',
+            'items'=>[
+                ['reports','view','reports.php','گزارش‌ها'],
+            ]
+        ],
         'system' => [
             'title'=>'مدیریت سیستم',
             'icon'=>'ti-settings',
