@@ -82,9 +82,17 @@ function page_header(string $title='برجینو'): void {
         </div>
     </div>
     <div class="borjino-toolbar">
-        <div class="borjino-search"><i class="ti-search"></i><input type="search" placeholder="جستجو"></div>
-        <button class="borjino-icon-btn" type="button" title="اعلان‌ها"><i class="ti-bell"></i><span class="dot"></span></button>
-        <button class="borjino-icon-btn" type="button" title="افزودن"><i class="ti-plus"></i></button>
+        <div class="borjino-search"><i class="ti-search"></i><input type="search" placeholder="جستجو در سامانه" aria-label="جستجو"></div>
+        <button class="borjino-icon-btn" type="button" title="اعلان‌ها" aria-label="اعلان‌ها"><i class="ti-bell"></i><span class="dot"></span></button>
+        <div class="borjino-quick-add">
+            <button class="borjino-icon-btn" type="button" title="افزودن سریع" aria-label="افزودن سریع" data-quick-add><i class="ti-plus"></i></button>
+            <div class="borjino-quick-menu" id="borjinoQuickMenu">
+                <?php if(has_permission('buildings','create')): ?><a href="buildings.php?new=1"><i class="ti-home"></i>ساختمان جدید</a><?php endif; ?>
+                <?php if(has_permission('units','create')): ?><a href="units.php?new=1"><i class="ti-layout-grid3"></i>واحد جدید</a><?php endif; ?>
+                <?php if(has_permission('persons','create')): ?><a href="persons.php?new=1"><i class="ti-user"></i>شخص جدید</a><?php endif; ?>
+                <?php if(has_permission('charges','create')): ?><a href="charges.php?new=1"><i class="ti-wallet"></i>شارژ جدید</a><?php endif; ?>
+            </div>
+        </div>
         <a class="borjino-user" href="#borjinoUser"><span><?= e(mb_substr($u['full_name']??$u['username']??'ب',0,1,'UTF-8')) ?></span></a>
     </div>
 </header>
@@ -128,6 +136,8 @@ if(mb)mb.addEventListener('click',toggleMenu); if(bd)bd.addEventListener('click'
 document.querySelectorAll('[data-close-panel]').forEach(function(b){b.addEventListener('click',function(){document.getElementById('borjinoUser').classList.remove('open')})});
 document.querySelector('.borjino-user')?.addEventListener('click',function(e){e.preventDefault();document.getElementById('borjinoUser').classList.add('open')});
 document.querySelector('[data-open-panel]')?.addEventListener('click',function(){document.getElementById('borjinoUser').classList.add('open')});
+var qa=document.querySelector('[data-quick-add]'),qm=document.getElementById('borjinoQuickMenu');
+if(qa&&qm){qa.addEventListener('click',function(e){e.stopPropagation();qm.classList.toggle('open')});document.addEventListener('click',function(){qm.classList.remove('open')})}
 </script>
 </body>
 </html>
