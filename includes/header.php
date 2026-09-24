@@ -53,6 +53,17 @@ function page_header(string $title='برجینو'): void {
             </div>
         <?php endforeach; ?>
     </div>
+    <nav class="borjino-blue-rail" aria-label="انتخاب اصلی">
+        <a href="index.php" class="active" title="داشبورد"><i class="ti-pie-chart"></i></a>
+        <a href="buildings.php" title="ساختمان‌ها"><i class="ti-home"></i></a>
+        <a href="persons.php" title="افراد"><i class="ti-user"></i></a>
+        <a href="payments.php" title="امور مالی"><i class="ti-wallet"></i></a>
+        <a href="reports.php" title="گزارش‌ها"><i class="ti-bar-chart"></i></a>
+    </nav>
+    <div class="borjino-rail-bottom">
+        <button type="button" title="تنظیمات"><i class="ti-settings"></i></button>
+        <button type="button" title="حساب کاربری"><i class="ti-user"></i></button>
+    </div>
     <div class="borjino-sidebar-summary">
         <div class="borjino-side-title">خلاصه</div>
         <div class="borjino-summary-row"><span class="borjino-summary-icon orange">▥</span><div><b>مدیریت</b><small>سامانه ساختمان</small></div></div>
