@@ -62,7 +62,7 @@ $content = '
                 </div>
                 <div>
                     <dt class="muted" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">نوع ساختمان</dt>
-                    <dd><span class="badge '.($statusBadges[$building['type']] ?? 'badge-secondary').'">'.($typeLabels[$building['type']] ?? $building['type']).'</span></dd>
+                    <dd><span class="badge badge-primary">'.($typeLabels[$building['type']] ?? $building['type']).'</span></dd>
                 </div>
                 <div>
                     <dt class="muted" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">کد پستی</dt>
