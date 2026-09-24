@@ -63,8 +63,8 @@ function page_header(string $title='برجینو'): void {
         <a href="users.php" class="<?= in_array($current_page,['users.php','access_groups.php'],true)?'active':'' ?>" title="مدیریت سیستم"><i class="ti-settings"></i></a>
     </nav>
     <div class="borjino-rail-bottom">
-        <button type="button" title="تنظیمات"><i class="ti-settings"></i></button>
-        <button type="button" title="حساب کاربری"><i class="ti-user"></i></button>
+        <?php if(has_permission('charge_settings','view')): ?><a href="charge_settings.php" title="تنظیمات"><i class="ti-settings"></i></a><?php endif; ?>
+        <button type="button" title="حساب کاربری" data-open-panel><i class="ti-user"></i></button>
     </div>
     <div class="borjino-sidebar-summary">
         <div class="borjino-side-title">خلاصه</div>
@@ -110,11 +110,24 @@ function page_footer(): void {
 <script src="assets/js/app.js"></script>
 <script>
 document.querySelectorAll('.borjino-menu-heading').forEach(function(b){b.addEventListener('click',function(){document.getElementById(b.dataset.target).classList.toggle('open');b.classList.toggle('open')})});
+(function(){
+    var current=<?=json_encode($current_page,JSON_UNESCAPED_UNICODE)?>;
+    document.querySelectorAll('.borjino-menu-group').forEach(function(group){
+        var active=group.querySelector('.borjino-submenu a.active');
+        if(active){
+            var submenu=group.querySelector('.borjino-submenu');
+            var heading=group.querySelector('.borjino-menu-heading');
+            if(submenu)submenu.classList.add('open');
+            if(heading)heading.classList.add('open');
+        }
+    });
+})();
 var mb=document.getElementById('borjinoMenuButton'),sb=document.getElementById('borjinoSidebar'),bd=document.getElementById('borjinoBackdrop');
 function toggleMenu(){sb.classList.toggle('open');bd.classList.toggle('open')}
 if(mb)mb.addEventListener('click',toggleMenu); if(bd)bd.addEventListener('click',toggleMenu);
 document.querySelectorAll('[data-close-panel]').forEach(function(b){b.addEventListener('click',function(){document.getElementById('borjinoUser').classList.remove('open')})});
 document.querySelector('.borjino-user')?.addEventListener('click',function(e){e.preventDefault();document.getElementById('borjinoUser').classList.add('open')});
+document.querySelector('[data-open-panel]')?.addEventListener('click',function(){document.getElementById('borjinoUser').classList.add('open')});
 </script>
 </body>
 </html>
