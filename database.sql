@@ -25,3 +25,32 @@ CREATE TABLE IF NOT EXISTS payments (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 INSERT INTO access_groups(name,description,is_system)
 SELECT 'administrators','دسترسی کامل سامانه',1
 WHERE NOT EXISTS (SELECT 1 FROM access_groups WHERE name='administrators');
+
+-- Seed full permissions for the built-in administrators group so fresh installs
+-- and the authenticated UI preview can exercise every application page.
+INSERT INTO permissions(group_id,resource,can_view,can_create,can_edit,can_delete)
+SELECT ag.id, r.resource, 1, 1, 1, 1
+FROM access_groups ag
+CROSS JOIN (
+    SELECT 'dashboard' AS resource UNION ALL
+    SELECT 'buildings' UNION ALL
+    SELECT 'blocks' UNION ALL
+    SELECT 'units' UNION ALL
+    SELECT 'personnel' UNION ALL
+    SELECT 'persons' UNION ALL
+    SELECT 'memberships' UNION ALL
+    SELECT 'contracts' UNION ALL
+    SELECT 'costs' UNION ALL
+    SELECT 'charges' UNION ALL
+    SELECT 'payments' UNION ALL
+    SELECT 'reports' UNION ALL
+    SELECT 'charge_settings' UNION ALL
+    SELECT 'users' UNION ALL
+    SELECT 'access_groups'
+) r
+WHERE ag.name='administrators'
+ON DUPLICATE KEY UPDATE
+    can_view=VALUES(can_view),
+    can_create=VALUES(can_create),
+    can_edit=VALUES(can_edit),
+    can_delete=VALUES(can_delete);
