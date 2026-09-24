@@ -67,12 +67,19 @@ function page_header(string $title='برجینو'): void {
             <button type="button" class="<?= $key===$active_section?'active':'' ?>" data-section-target="<?= e($key) ?>" title="<?= e($section['title']) ?>">
                 <i class="<?= e($section['icon']) ?>"></i>
             </button>
+            <?php if($key==='dashboard'): ?>
+                <div class="borjino-dashboard-summary" aria-label="خلاصه داشبورد">
+                    <div class="borjino-dashboard-summary-item">
+                        <span class="borjino-summary-icon orange">▥</span>
+                        <b>مدیریت</b>
+                    </div>
+                    <div class="borjino-dashboard-summary-item">
+                        <span class="borjino-summary-icon green">✓</span>
+                        <b>فعال</b>
+                    </div>
+                </div>
+            <?php endif; ?>
         <?php endforeach; ?>
-        <div class="borjino-rail-summary" aria-label="خلاصه سامانه">
-            <div class="borjino-rail-summary-title">خلاصه</div>
-            <div class="borjino-rail-summary-item"><span class="borjino-summary-icon orange">▥</span><b>مدیریت</b></div>
-            <div class="borjino-rail-summary-item"><span class="borjino-summary-icon green">✓</span><b>فعال</b></div>
-        </div>
     </nav>
     <div class="borjino-rail-bottom">
         <button type="button" title="حساب کاربری" data-open-panel><i class="ti-user"></i></button>
