@@ -32,7 +32,7 @@ body{overflow-x:hidden;-webkit-font-smoothing:antialiased}.borjino-nextable *{bo
 /* Nextable reference: blue primary selection rail */
 .borjino-blue-rail{
     position:absolute;
-    left:20px;
+    right:20px;
     top:107px;
     width:70px;
     padding:8px 0;
@@ -73,7 +73,7 @@ body{overflow-x:hidden;-webkit-font-smoothing:antialiased}.borjino-nextable *{bo
 }
 .borjino-rail-bottom{
     position:absolute;
-    left:20px;
+    right:20px;
     bottom:22px;
     width:73px;
     display:flex;
@@ -91,8 +91,8 @@ body{overflow-x:hidden;-webkit-font-smoothing:antialiased}.borjino-nextable *{bo
     cursor:pointer;
 }
 @media(max-width:1200px){
-    .borjino-blue-rail{left:12px}
-    .borjino-rail-bottom{left:12px}
+    .borjino-blue-rail{right:12px}
+    .borjino-rail-bottom{right:12px}
 }
 @media(max-width:900px){
     .borjino-blue-rail,.borjino-rail-bottom{display:none}
