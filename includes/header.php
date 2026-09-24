@@ -49,24 +49,25 @@ function page_header(string $title='برجینو'): void {
     ?>
     <div class="borjino-side-scroll">
         <div class="borjino-side-title">منوی <?= e($visibleMenu[$active_section]['title'] ?? 'اصلی') ?></div>
-        <?php if($active_section==='dashboard'): ?>
-            <div class="borjino-sidebar-summary" aria-label="خلاصه داشبورد">
-                <div class="borjino-side-title">خلاصه</div>
-                <div class="borjino-summary-row">
-                    <span class="borjino-summary-icon orange">▥</span>
-                    <div><b>مدیریت</b><small>سامانه ساختمان</small></div>
-                </div>
-                <div class="borjino-summary-row">
-                    <span class="borjino-summary-icon green">✓</span>
-                    <div><b>فعال</b><small>وضعیت سامانه</small></div>
-                </div>
-            </div>
-        <?php endif; ?>
         <?php foreach($visibleMenu as $key=>$section): ?>
+
             <div class="borjino-menu-group <?= $key===$active_section?'active':'' ?>" data-section="<?= e($key) ?>">
                 <button type="button" class="borjino-menu-heading" data-target="menu-<?= e($key) ?>">
                     <span><i class="<?= e($section['icon']) ?>"></i><?= e($section['title']) ?></span><i class="ti-angle-down"></i>
                 </button>
+                <?php if($key==='dashboard'): ?>
+                    <div class="borjino-sidebar-summary" aria-label="خلاصه داشبورد">
+                        <div class="borjino-side-title">خلاصه</div>
+                        <div class="borjino-summary-row">
+                            <span class="borjino-summary-icon orange">▥</span>
+                            <div><b>مدیریت</b><small>سامانه ساختمان</small></div>
+                        </div>
+                        <div class="borjino-summary-row">
+                            <span class="borjino-summary-icon green">✓</span>
+                            <div><b>فعال</b><small>وضعیت سامانه</small></div>
+                        </div>
+                    </div>
+                <?php endif; ?>
                 <div id="menu-<?= e($key) ?>" class="borjino-submenu">
                 <?php foreach($section['items'] as $item): ?>
                     <a href="<?= e($item[2]) ?>" class="<?= $current_page===$item[2]?'active':'' ?>"><?= e($item[3]) ?></a>
