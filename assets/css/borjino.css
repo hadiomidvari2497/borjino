@@ -34,9 +34,10 @@ body{overflow-x:hidden;-webkit-font-smoothing:antialiased}.borjino-nextable *{bo
     position:absolute;
     right:20px;
     top:112px;
+    bottom:0;
     width:70px;
-    padding:8px 0;
-    border-radius:6px;
+    padding:8px 0 16px;
+    border-radius:6px 6px 0 0;
     background:var(--b-primary);
     display:flex;
     flex-direction:column;
@@ -78,7 +79,7 @@ body{overflow-x:hidden;-webkit-font-smoothing:antialiased}.borjino-nextable *{bo
 .borjino-rail-bottom{
     position:absolute;
     right:20px;
-    bottom:22px;
+    bottom:12px;
     z-index:20;
     width:73px;
     display:flex;
@@ -279,4 +280,23 @@ body{overflow-x:hidden;-webkit-font-smoothing:antialiased}.borjino-nextable *{bo
 @media(max-width:900px){
     .borjino-menu-group{display:block}
     .borjino-menu-heading{display:flex!important}
+}
+
+
+/* Keep the sidebar summary inside the full blue primary-navigation rail. */
+.borjino-blue-rail{justify-content:flex-start}
+.borjino-rail-summary{
+    margin-top:auto;
+    width:100%;
+    padding:10px 6px 8px;
+    border-top:1px solid rgba(255,255,255,.18);
+    color:#fff;
+    text-align:center;
+}
+.borjino-rail-summary-title{font-size:10px;font-weight:900;opacity:.9;margin-bottom:7px}
+.borjino-rail-summary-item{display:flex;flex-direction:column;align-items:center;gap:4px;margin:7px 0;font-size:9px;font-weight:800}
+.borjino-rail-summary .borjino-summary-icon{width:30px;height:30px;border-radius:7px;font-size:13px;box-shadow:0 2px 7px rgba(0,0,0,.12)}
+.borjino-rail-bottom{background:transparent;border-radius:0;padding:0}
+@media(max-height:700px) and (min-width:901px){
+    .borjino-blue-rail{top:92px;bottom:0;max-height:none}
 }
