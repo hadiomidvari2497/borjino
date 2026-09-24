@@ -39,31 +39,37 @@ function page_header(string $title='برجینو'): void {
 <div class="borjino-mobile-backdrop" id="borjinoBackdrop"></div>
 <aside class="borjino-sidebar" id="borjinoSidebar">
     <div class="borjino-brand"><a href="index.php"><span class="borjino-brand-mark">ب</span><span>برجینو</span></a></div>
+    <?php
+    $active_section = 'dashboard';
+    foreach($visibleMenu as $key=>$section){
+        foreach($section['items'] as $item){
+            if($current_page === $item[2]){$active_section=$key;break 2;}
+        }
+    }
+    ?>
     <div class="borjino-side-scroll">
-        <div class="borjino-side-title">داشبورد</div>
+        <div class="borjino-side-title">منوی <?= e($visibleMenu[$active_section]['title'] ?? 'اصلی') ?></div>
         <?php foreach($visibleMenu as $key=>$section): ?>
-            <div class="borjino-menu-group">
+            <div class="borjino-menu-group <?= $key===$active_section?'active':'' ?>" data-section="<?= e($key) ?>">
                 <button type="button" class="borjino-menu-heading" data-target="menu-<?= e($key) ?>">
                     <span><i class="<?= e($section['icon']) ?>"></i><?= e($section['title']) ?></span><i class="ti-angle-down"></i>
                 </button>
                 <div id="menu-<?= e($key) ?>" class="borjino-submenu">
                 <?php foreach($section['items'] as $item): ?>
-                    <a href="<?= e($item[2]) ?>" class="<?= basename($_SERVER['PHP_SELF'])===$item[2]?'active':'' ?>"><?= e($item[3]) ?></a>
+                    <a href="<?= e($item[2]) ?>" class="<?= $current_page===$item[2]?'active':'' ?>"><?= e($item[3]) ?></a>
                 <?php endforeach; ?>
                 </div>
             </div>
         <?php endforeach; ?>
     </div>
-    <nav class="borjino-blue-rail" aria-label="انتخاب اصلی">
-        <a href="index.php" class="<?= $current_page==='index.php'?'active':'' ?>" title="داشبورد"><i class="ti-pie-chart"></i></a>
-        <a href="buildings.php" class="<?= in_array($current_page,['buildings.php','blocks.php','units.php'],true)?'active':'' ?>" title="مدیریت ساختمان"><i class="ti-home"></i></a>
-        <a href="persons.php" class="<?= in_array($current_page,['personnel.php','persons.php','memberships.php','contracts.php'],true)?'active':'' ?>" title="مدیریت افراد"><i class="ti-user"></i></a>
-        <a href="payments.php" class="<?= in_array($current_page,['costs.php','charges.php','payments.php','charge_settings.php'],true)?'active':'' ?>" title="امور مالی"><i class="ti-wallet"></i></a>
-        <a href="reports.php" class="<?= $current_page==='reports.php'?'active':'' ?>" title="گزارش‌ها"><i class="ti-bar-chart"></i></a>
-        <a href="users.php" class="<?= in_array($current_page,['users.php','access_groups.php'],true)?'active':'' ?>" title="مدیریت سیستم"><i class="ti-settings"></i></a>
+    <nav class="borjino-blue-rail" aria-label="منوی اصلی">
+        <?php foreach($visibleMenu as $key=>$section): ?>
+            <button type="button" class="<?= $key===$active_section?'active':'' ?>" data-section-target="<?= e($key) ?>" title="<?= e($section['title']) ?>">
+                <i class="<?= e($section['icon']) ?>"></i>
+            </button>
+        <?php endforeach; ?>
     </nav>
     <div class="borjino-rail-bottom">
-        <?php if(has_permission('charge_settings','view')): ?><a href="charge_settings.php" title="تنظیمات"><i class="ti-settings"></i></a><?php endif; ?>
         <button type="button" title="حساب کاربری" data-open-panel><i class="ti-user"></i></button>
     </div>
     <div class="borjino-sidebar-summary">
@@ -117,18 +123,35 @@ function page_footer(): void {
 <script src="assets/js/vendor/bundle.js"></script>
 <script src="assets/js/app.js"></script>
 <script>
-document.querySelectorAll('.borjino-menu-heading').forEach(function(b){b.addEventListener('click',function(){document.getElementById(b.dataset.target).classList.toggle('open');b.classList.toggle('open')})});
 (function(){
     var current=<?=json_encode($current_page,JSON_UNESCAPED_UNICODE)?>;
-    document.querySelectorAll('.borjino-menu-group').forEach(function(group){
-        var active=group.querySelector('.borjino-submenu a.active');
-        if(active){
+    function activateSection(key){
+        document.querySelectorAll('.borjino-menu-group').forEach(function(group){
+            var active=group.dataset.section===key;
+            group.classList.toggle('active',active);
             var submenu=group.querySelector('.borjino-submenu');
             var heading=group.querySelector('.borjino-menu-heading');
-            if(submenu)submenu.classList.add('open');
-            if(heading)heading.classList.add('open');
-        }
+            if(submenu)submenu.classList.toggle('open',active);
+            if(heading)heading.classList.toggle('open',active);
+        });
+        document.querySelectorAll('.borjino-blue-rail [data-section-target]').forEach(function(btn){
+            btn.classList.toggle('active',btn.dataset.sectionTarget===key);
+        });
+        var title=document.querySelector('.borjino-side-title');
+        var group=document.querySelector('.borjino-menu-group[data-section="'+key+'"]');
+        var heading=group&&group.querySelector('.borjino-menu-heading');
+        if(title&&heading)title.textContent='منوی '+heading.textContent.replace(/\s*⌄?\s*$/,'').trim();
+    }
+    document.querySelectorAll('.borjino-blue-rail [data-section-target]').forEach(function(btn){
+        btn.addEventListener('click',function(){activateSection(btn.dataset.sectionTarget)});
     });
+    document.querySelectorAll('.borjino-menu-heading').forEach(function(b){
+        b.addEventListener('click',function(){
+            var group=b.closest('.borjino-menu-group');
+            activateSection(group.dataset.section);
+        });
+    });
+    activateSection(<?=json_encode($active_section,JSON_UNESCAPED_UNICODE)?>);
 })();
 var mb=document.getElementById('borjinoMenuButton'),sb=document.getElementById('borjinoSidebar'),bd=document.getElementById('borjinoBackdrop');
 function toggleMenu(){sb.classList.toggle('open');bd.classList.toggle('open')}
