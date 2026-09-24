@@ -46,23 +46,25 @@ body{overflow-x:hidden;-webkit-font-smoothing:antialiased}.borjino-nextable *{bo
     z-index:20;
     isolation:isolate;
 }
-.borjino-blue-rail a{
+.borjino-blue-rail button{
     width:54px;
     height:60px;
+    border:0;
     border-radius:5px;
     display:grid;
     place-items:center;
     color:#e9ebff;
-    text-decoration:none;
+    background:transparent;
     font-size:23px;
     position:relative;
+    cursor:pointer;
 }
-.borjino-blue-rail a:hover,
-.borjino-blue-rail a.active{
+.borjino-blue-rail button:hover,
+.borjino-blue-rail button.active{
     background:#5261db;
     color:#fff;
 }
-.borjino-blue-rail a.active:after{
+.borjino-blue-rail button.active:after{
     content:"";
     position:absolute;
     right:-1px;
@@ -263,4 +265,18 @@ body{overflow-x:hidden;-webkit-font-smoothing:antialiased}.borjino-nextable *{bo
     .borjino-topbar h1{max-width:180px}
     .borjino-toolbar{gap:4px}
     .borjino-main>.content-header .btn{width:auto;max-width:100%}
+}
+
+
+/* Section navigation: blue rail selects the main section, white area shows its children */
+@media(min-width:901px){
+    .borjino-menu-group{display:none}
+    .borjino-menu-group.active{display:block}
+    .borjino-menu-group.active .borjino-menu-heading{display:none}
+    .borjino-menu-group.active .borjino-submenu{display:block}
+    .borjino-side-title{margin-top:10px}
+}
+@media(max-width:900px){
+    .borjino-menu-group{display:block}
+    .borjino-menu-heading{display:flex!important}
 }
