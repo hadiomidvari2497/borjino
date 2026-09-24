@@ -29,7 +29,7 @@ body{overflow-x:hidden;-webkit-font-smoothing:antialiased}.borjino-nextable *{bo
 @media(max-width:900px){.borjino-sidebar{transform:translateX(100%);transition:.2s;width:300px}.borjino-sidebar.open{transform:translateX(0)}.borjino-topbar,.borjino-main{margin-right:0}.borjino-topbar{height:82px;padding:0 16px}.borjino-topbar h1{font-size:21px}.borjino-breadcrumb{display:none}.borjino-mobile-menu{display:block;border:0;background:#fff;width:42px;height:42px;border-radius:8px;color:var(--b-primary);font-size:20px}.borjino-toolbar{gap:6px}.borjino-search{display:none}.borjino-mobile-backdrop.open{display:block;position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:90}.borjino-main{padding:0 15px 35px}.b-dashboard-grid,.b-kpi-grid{grid-template-columns:1fr}}
 @media(max-width:600px){.b-network{grid-template-columns:1fr}.b-card-head{padding:0 16px}.b-card-body{padding:18px 15px}.borjino-topbar{padding:0 10px}.borjino-icon-btn{width:40px}.borjino-user{width:42px;height:42px}.b-net-head{font-size:14px}.b-net-num{font-size:23px}}
 
-/* Nextable reference: blue primary selection rail */
+/* Primary navigation rail */
 .borjino-blue-rail{
     position:absolute;
     right:20px;
@@ -223,4 +223,44 @@ body{overflow-x:hidden;-webkit-font-smoothing:antialiased}.borjino-nextable *{bo
     .borjino-main .content-header h4{font-size:20px}
     .borjino-main .card + .card{margin-top:14px}
     .borjino-main .btn{min-height:40px}
+}
+
+
+/* Collision fixes: keep navigation, header and content in separate visual layers */
+.borjino-sidebar{overflow:hidden}
+.borjino-side-scroll{position:relative;z-index:1;padding-bottom:18px}
+.borjino-blue-rail{max-height:calc(100vh - 150px);overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+.borjino-blue-rail::-webkit-scrollbar{display:none}
+.borjino-rail-bottom{background:var(--b-sidebar);border-radius:8px;padding:4px 0}
+.borjino-sidebar-summary{position:absolute;left:20px;right:108px;bottom:16px;margin:0!important;background:var(--b-sidebar);z-index:5}
+.borjino-topbar{position:relative;z-index:30;min-width:0}
+.borjino-top-right,.borjino-toolbar{min-width:0}
+.borjino-top-right>div{min-width:0}
+.borjino-topbar h1{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.borjino-toolbar{flex-shrink:0}
+.borjino-search{flex-shrink:1;min-width:120px}
+.borjino-main{position:relative;z-index:1;overflow:visible}
+.borjino-main>.content-header{position:relative;z-index:2}
+.borjino-main .card{position:relative;z-index:1}
+@media(max-width:1050px) and (min-width:901px){
+    .borjino-search{width:180px}
+    .borjino-topbar{padding-left:18px;padding-right:18px}
+}
+@media(max-width:960px) and (min-width:901px){
+    .borjino-search{display:none}
+}
+@media(max-height:700px) and (min-width:901px){
+    .borjino-sidebar-summary{display:none}
+    .borjino-side-scroll{max-height:calc(100vh - 120px)}
+    .borjino-blue-rail{top:92px;max-height:calc(100vh - 120px)}
+}
+@media(max-width:900px){
+    .borjino-sidebar-summary{position:static;display:block;margin:0 20px 20px!important}
+    .borjino-side-scroll{max-height:none;padding-bottom:8px}
+}
+@media(max-width:600px){
+    .borjino-top-right{gap:9px;flex:1;min-width:0}
+    .borjino-topbar h1{max-width:180px}
+    .borjino-toolbar{gap:4px}
+    .borjino-main>.content-header .btn{width:auto;max-width:100%}
 }
