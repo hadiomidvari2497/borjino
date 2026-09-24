@@ -68,14 +68,14 @@ function page_header(string $title='برجینو'): void {
                 <i class="<?= e($section['icon']) ?>"></i>
             </button>
         <?php endforeach; ?>
+        <div class="borjino-rail-summary" aria-label="خلاصه سامانه">
+            <div class="borjino-rail-summary-title">خلاصه</div>
+            <div class="borjino-rail-summary-item"><span class="borjino-summary-icon orange">▥</span><b>مدیریت</b></div>
+            <div class="borjino-rail-summary-item"><span class="borjino-summary-icon green">✓</span><b>فعال</b></div>
+        </div>
     </nav>
     <div class="borjino-rail-bottom">
         <button type="button" title="حساب کاربری" data-open-panel><i class="ti-user"></i></button>
-    </div>
-    <div class="borjino-sidebar-summary">
-        <div class="borjino-side-title">خلاصه</div>
-        <div class="borjino-summary-row"><span class="borjino-summary-icon orange">▥</span><div><b>مدیریت</b><small>سامانه ساختمان</small></div></div>
-        <div class="borjino-summary-row"><span class="borjino-summary-icon green">✓</span><div><b>فعال</b><small>وضعیت سامانه</small></div></div>
     </div>
 </aside>
 
