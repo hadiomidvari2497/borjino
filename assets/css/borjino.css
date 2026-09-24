@@ -301,30 +301,18 @@ body{overflow-x:hidden;-webkit-font-smoothing:antialiased}.borjino-nextable *{bo
     .borjino-blue-rail{top:92px;bottom:0;max-height:none}
 }
 
-/* Dashboard summary lives directly under the dashboard item in the blue rail. */
-.borjino-blue-rail{justify-content:flex-start}
-.borjino-dashboard-summary{
-    width:100%;
-    padding:7px 5px 9px;
-    margin:0 0 2px;
-    border-bottom:1px solid rgba(255,255,255,.18);
+/* Dashboard summary in the white sidebar area. */
+@media(min-width:901px){
+    .borjino-sidebar-summary{
+        padding:0 12px;
+        margin:8px 0 0;
+    }
+    .borjino-sidebar-summary .borjino-side-title{
+        margin:12px 0 6px;
+        padding:0;
+        font-size:14px;
+    }
+    .borjino-sidebar-summary .borjino-summary-row{
+        padding:9px 0;
+    }
 }
-.borjino-dashboard-summary-item{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:6px;
-    min-height:34px;
-    margin:3px 0;
-    color:#fff;
-    font-size:9px;
-    font-weight:800;
-}
-.borjino-dashboard-summary-item .borjino-summary-icon{
-    width:27px;
-    height:27px;
-    border-radius:6px;
-    font-size:12px;
-    flex:0 0 27px;
-}
-.borjino-rail-summary{display:none!important}
