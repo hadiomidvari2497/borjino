@@ -1,8 +1,9 @@
 <?php
 require_once __DIR__.'/config.php'; require_page_permission('buildings');
 
-if(isset($_GET['delete'])){
-    $id=(int)$_GET['delete']; $st=$pdo->prepare('SELECT COUNT(*) FROM blocks WHERE building_id=?'); $st->execute([$id]);
+if(isset($_POST['action']) && $_POST['action']==='delete'){
+    check_csrf();
+    $id=(int)post('id'); $st=$pdo->prepare('SELECT COUNT(*) FROM blocks WHERE building_id=?'); $st->execute([$id]);
     if((int)$st->fetchColumn()>0){flash('این ساختمان دارای بلوک است و ابتدا باید بلوک‌ها حذف شوند.');redirect('buildings.php');}
     $pdo->prepare('DELETE FROM buildings WHERE id=?')->execute([$id]); flash('ساختمان حذف شد.'); redirect('buildings.php');
 }
@@ -104,7 +105,7 @@ page_header('ساختمان‌ها');
                         <td><?=e($r['manager_name']?:'—')?></td>
                         <td class="text-nowrap">
                             <a class="btn btn-sm btn-outline-primary" href="buildings.php?edit=<?=$r['id']?>" title="ویرایش"><i class="ti-pencil"></i></a>
-                            <a class="btn btn-sm btn-outline-danger" onclick="return confirm('آیا از حذف این ساختمان اطمینان دارید؟')" href="buildings.php?delete=<?=$r['id']?>" title="حذف"><i class="ti-trash"></i></a>
+                            <form method="post" class="d-inline" onsubmit="return confirm('آیا از حذف این ساختمان اطمینان دارید؟')"><?=csrf_field()?><input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="<?=$r['id']?>"><button class="btn btn-sm btn-outline-danger" title="حذف"><i class="ti-trash"></i></button></form>
                         </td>
                     </tr>
                 <?php endforeach;?>
