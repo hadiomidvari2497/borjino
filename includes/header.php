@@ -49,6 +49,19 @@ function page_header(string $title='برجینو'): void {
     ?>
     <div class="borjino-side-scroll">
         <div class="borjino-side-title">منوی <?= e($visibleMenu[$active_section]['title'] ?? 'اصلی') ?></div>
+        <?php if($active_section==='dashboard'): ?>
+            <div class="borjino-sidebar-summary" aria-label="خلاصه داشبورد">
+                <div class="borjino-side-title">خلاصه</div>
+                <div class="borjino-summary-row">
+                    <span class="borjino-summary-icon orange">▥</span>
+                    <div><b>مدیریت</b><small>سامانه ساختمان</small></div>
+                </div>
+                <div class="borjino-summary-row">
+                    <span class="borjino-summary-icon green">✓</span>
+                    <div><b>فعال</b><small>وضعیت سامانه</small></div>
+                </div>
+            </div>
+        <?php endif; ?>
         <?php foreach($visibleMenu as $key=>$section): ?>
             <div class="borjino-menu-group <?= $key===$active_section?'active':'' ?>" data-section="<?= e($key) ?>">
                 <button type="button" class="borjino-menu-heading" data-target="menu-<?= e($key) ?>">
@@ -67,18 +80,6 @@ function page_header(string $title='برجینو'): void {
             <button type="button" class="<?= $key===$active_section?'active':'' ?>" data-section-target="<?= e($key) ?>" title="<?= e($section['title']) ?>">
                 <i class="<?= e($section['icon']) ?>"></i>
             </button>
-            <?php if($key==='dashboard'): ?>
-                <div class="borjino-dashboard-summary" aria-label="خلاصه داشبورد">
-                    <div class="borjino-dashboard-summary-item">
-                        <span class="borjino-summary-icon orange">▥</span>
-                        <b>مدیریت</b>
-                    </div>
-                    <div class="borjino-dashboard-summary-item">
-                        <span class="borjino-summary-icon green">✓</span>
-                        <b>فعال</b>
-                    </div>
-                </div>
-            <?php endif; ?>
         <?php endforeach; ?>
     </nav>
     <div class="borjino-rail-bottom">
