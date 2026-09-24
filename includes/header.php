@@ -3,6 +3,7 @@ function page_header(string $title='برجینو'): void {
     $u = current_user();
     $f = flash();
     $page_title = $title;
+    $current_page = basename($_SERVER['PHP_SELF']);
 
     $menu = [
         'dashboard'=>['title'=>'داشبورد','icon'=>'ti-pie-chart','items'=>[['dashboard','view','index.php','داشبورد']]],
@@ -54,11 +55,11 @@ function page_header(string $title='برجینو'): void {
         <?php endforeach; ?>
     </div>
     <nav class="borjino-blue-rail" aria-label="انتخاب اصلی">
-        <a href="index.php" class="active" title="داشبورد"><i class="ti-pie-chart"></i></a>
-        <a href="buildings.php" title="ساختمان‌ها"><i class="ti-home"></i></a>
-        <a href="persons.php" title="افراد"><i class="ti-user"></i></a>
-        <a href="payments.php" title="امور مالی"><i class="ti-wallet"></i></a>
-        <a href="reports.php" title="گزارش‌ها"><i class="ti-bar-chart"></i></a>
+        <a href="index.php" class="<?= $current_page==='index.php'?'active':'' ?>" title="داشبورد"><i class="ti-pie-chart"></i></a>
+        <a href="buildings.php" class="<?= $current_page==='buildings.php'?'active':'' ?>" title="ساختمان‌ها"><i class="ti-home"></i></a>
+        <a href="persons.php" class="<?= $current_page==='persons.php'?'active':'' ?>" title="افراد"><i class="ti-user"></i></a>
+        <a href="payments.php" class="<?= $current_page==='payments.php'?'active':'' ?>" title="امور مالی"><i class="ti-wallet"></i></a>
+        <a href="reports.php" class="<?= $current_page==='reports.php'?'active':'' ?>" title="گزارش‌ها"><i class="ti-bar-chart"></i></a>
     </nav>
     <div class="borjino-rail-bottom">
         <button type="button" title="تنظیمات"><i class="ti-settings"></i></button>
