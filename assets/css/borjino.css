@@ -300,3 +300,31 @@ body{overflow-x:hidden;-webkit-font-smoothing:antialiased}.borjino-nextable *{bo
 @media(max-height:700px) and (min-width:901px){
     .borjino-blue-rail{top:92px;bottom:0;max-height:none}
 }
+
+/* Dashboard summary lives directly under the dashboard item in the blue rail. */
+.borjino-blue-rail{justify-content:flex-start}
+.borjino-dashboard-summary{
+    width:100%;
+    padding:7px 5px 9px;
+    margin:0 0 2px;
+    border-bottom:1px solid rgba(255,255,255,.18);
+}
+.borjino-dashboard-summary-item{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    min-height:34px;
+    margin:3px 0;
+    color:#fff;
+    font-size:9px;
+    font-weight:800;
+}
+.borjino-dashboard-summary-item .borjino-summary-icon{
+    width:27px;
+    height:27px;
+    border-radius:6px;
+    font-size:12px;
+    flex:0 0 27px;
+}
+.borjino-rail-summary{display:none!important}
