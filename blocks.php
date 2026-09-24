@@ -2,8 +2,9 @@
 require_once __DIR__.'/config.php';
 require_page_permission('blocks');
 
-if (isset($_GET['delete'])) {
-    $id=(int)$_GET['delete'];
+if (isset($_POST['action']) && $_POST['action']==='delete') {
+    check_csrf();
+    $id=(int)post('id');
     $st=$pdo->prepare('SELECT COUNT(*) FROM units WHERE block_id=?');
     $st->execute([$id]);
     if ((int)$st->fetchColumn()>0) { flash('این بلوک دارای واحد است و تا حذف واحدها قابل حذف نیست.'); redirect('blocks.php'); }
@@ -68,7 +69,7 @@ page_header('بلوک‌ها');
 <thead><tr><th>شماره</th><th>نام بلوک</th><th>ساختمان</th><th>طبقات</th><th>تعداد واحد</th><th>عملیات</th></tr></thead>
 <tbody><?php foreach($rows as $r): ?><tr>
 <td><?=e($r['block_no'])?></td><td><?=e($r['name'])?></td><td><?=e($r['building_name'])?></td><td><?=$r['floor_count']?></td><td><?=$r['unit_count']?></td>
-<td><a class="btn btn-sm btn-outline-primary" href="blocks.php?edit=<?=$r['id']?>">ویرایش</a> <a class="btn btn-sm btn-outline-danger" onclick="return confirm('حذف شود؟')" href="blocks.php?delete=<?=$r['id']?>">حذف</a></td>
+<td><a class="btn btn-sm btn-outline-primary" href="blocks.php?edit=<?=$r['id']?>">ویرایش</a> <form method="post" class="d-inline" onsubmit="return confirm('حذف شود؟')"><?=csrf_field()?><input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="<?=$r['id']?>"><button class="btn btn-sm btn-outline-danger">حذف</button></form></td>
 </tr><?php endforeach; ?></tbody>
 </table></div></div></div>
 <?php page_footer(); ?>
