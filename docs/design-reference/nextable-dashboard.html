@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nextable Dashboard Mockup</title>
+<style>
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+:root{
+  --bg:#edf1f4;--card:#fff;--text:#171717;--muted:#8a8f98;
+  --blue:#5967df;--blue2:#5261db;--green:#12b987;--red:#ef4740;
+  --orange:#ffb51c;--line:#e7eaee;--sidebar:#fff;--rail:#5967df;
+  --shadow:0 2px 10px rgba(34,42,53,.035);
+}
+html,body{margin:0;min-height:100%;font-family:Tahoma,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--text)}
+body{overflow-x:auto;-webkit-font-smoothing:antialiased}
+button,input{font:inherit}
+button{cursor:pointer}
+.app{min-width:1280px;display:flex;direction:ltr;min-height:100vh}
+.main{direction:rtl;flex:1;padding:0 36px 52px;min-width:0}
+.main:before{content:"";display:block;height:1px}
+.sidebar{direction:rtl;width:390px;background:var(--sidebar);min-height:100vh;position:sticky;right:0;top:0;order:2;border-left:1px solid #e8ebef;box-shadow:-3px 0 16px rgba(30,35,45,.025);z-index:10}
+.top{height:116px;display:flex;align-items:center;justify-content:space-between;padding-top:2px}
+.top-right{display:flex;align-items:center;gap:14px}
+.title{font-size:31px;line-height:1;font-weight:900;margin:0 0 0 0;letter-spacing:-.4px}
+.breadcrumb{margin-top:13px;font-size:15px;color:#333}
+.breadcrumb b{color:#121212}.breadcrumb a{color:#5864dc;text-decoration:none;font-weight:600}
+.toolbar{direction:ltr;display:flex;align-items:center;gap:10px}
+.avatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(145deg,#777,#222);border:3px solid #fff;box-shadow:0 1px 4px #bbb;position:relative}
+.avatar:after{content:"";position:absolute;width:10px;height:10px;border-radius:50%;background:#10c994;right:-3px;top:0;border:2px solid white}
+.iconbtn{width:47px;height:45px;border:1px solid #edf0f2;border-radius:7px;background:#fff;box-shadow:var(--shadow);position:relative;color:#777;font-size:25px;transition:.18s} .iconbtn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(40,48,60,.08)}
+.iconbtn .dot{position:absolute;right:-2px;top:-3px;width:10px;height:10px;background:#e84848;border-radius:50%}
+.search{height:45px;width:296px;background:#fff;border:1px solid #edf0f2;border-radius:7px;display:flex;align-items:center;gap:11px;padding:0 15px;color:#777;box-shadow:var(--shadow)}
+.search span{font-size:20px;color:#5261df}.search input{border:0;outline:0;width:100%;font-size:17px;color:#555;text-align:right}
+
+.content{display:flex;flex-direction:column;gap:28px}
+.card{background:var(--card);border-radius:8px;border:1px solid #edf0f2;box-shadow:var(--shadow);overflow:hidden}
+.card-head{height:63px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 28px;font-size:17px;font-weight:900}
+.card-body{padding:25px 28px}
+.switch{display:flex;gap:7px;margin-bottom:0;align-self:flex-start;background:#fff;border:1px solid #e5e8ec;padding:4px;border-radius:8px;box-shadow:var(--shadow)}
+.switch button{border:0;background:transparent;border-radius:6px;padding:8px 18px;color:#626873;font-size:14px;font-weight:800;transition:.18s}
+.switch button.active{background:#5967df;color:#fff;box-shadow:0 2px 7px rgba(89,103,223,.22)}
+
+.sidebar-logo{height:112px;display:flex;align-items:center;gap:13px;padding:0 43px;font-size:27px;font-weight:900;direction:ltr;letter-spacing:-.5px}
+.flame{width:43px;height:52px;color:#5966dc}
+.sidebar-inner{padding:0 21px 40px}
+.side-title{font-size:16px;font-weight:800;margin:8px 0 10px;padding-right:30px}
+.side-menu{display:flex;flex-direction:column;gap:4px}
+.side-item{height:47px;border-radius:7px;display:flex;align-items:center;padding:0 29px;font-size:16px;font-weight:700;position:relative;transition:.16s} .side-item:hover{background:#f7f7f8}
+.side-item.active{background:#f0f0f1;color:#5967df}
+.side-item.dot:before{content:"";width:10px;height:10px;border-radius:50%;background:#ffb31a;position:absolute;right:14px}
+.side-item.section{margin-top:10px;font-weight:900}
+.side-summary{margin-top:28px}
+.summary-title{font-size:17px;font-weight:900;padding-right:30px;margin-bottom:8px}
+.summary{display:grid;grid-template-columns:1fr;gap:12px}
+.summary-row{display:flex;align-items:center;justify-content:space-between;padding:5px 21px 5px 25px}
+.summary-row .n{font-size:24px;font-weight:900;margin-top:2px}
+.summary-row .l{font-size:16px;font-weight:700}
+.sicon{width:46px;height:46px;border-radius:6px;display:grid;place-items:center;color:#fff;font-size:24px;order:0}
+.sicon.orange{background:#ffb31a}.sicon.green{background:#13b78c}.sicon.sky{background:#54a7df}
+.rail{position:absolute;left:20px;top:107px;width:70px;border-radius:6px;background:#5967df;display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:6px;box-shadow:0 4px 12px rgba(89,103,223,.16)}
+.rail-item{width:54px;height:60px;color:#e9ebff;display:grid;place-items:center;font-size:26px;position:relative;border-radius:5px}
+.rail-item.active{background:#5966dc;color:#fff}.rail-item .tiny{position:absolute;width:11px;height:11px;background:#ffb31a;border-radius:50%;top:9px;right:5px}
+.rail-bottom{position:absolute;left:20px;bottom:22px;width:73px;display:flex;flex-direction:column;align-items:center;gap:18px;color:#6874e2;font-size:26px}
+
+.tab-panel{display:none}.tab-panel.active{display:block}
+
+/* dashboard 1 */
+.sales-network{padding:23px 27px 28px}
+.sales-title{font-size:17px;font-weight:900;margin-bottom:22px}
+.nav-arrows{direction:ltr;display:flex;gap:6px;margin-bottom:18px}
+.arrow{width:43px;height:32px;border:1px solid #d8dde2;background:#fff;border-radius:4px;font-size:25px;color:#333}
+.network-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:30px}
+.net{border:1px solid #dfe4e8;border-radius:7px;padding:19px 27px 17px;min-height:122px;background:#fff;transition:.18s}.net:hover{box-shadow:0 5px 16px rgba(30,38,50,.055);transform:translateY(-1px)}
+.net-head{display:flex;align-items:center;justify-content:space-between;font-size:16px;font-weight:800;gap:10px}
+.net-num{font-size:28px;font-weight:900;letter-spacing:-.4px}.net-icon{width:38px;height:38px;flex:0 0 38px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:20px}
+.net-bar{height:5px;background:#e9ecef;margin-top:24px;border-radius:5px;position:relative;overflow:hidden}
+.net-bar i{display:block;height:100%;position:absolute;right:0}
+.net.green .net-num{color:#2acb55}.net.green .net-icon,.net.green .net-bar i{background:#36cf55;width:80%}
+.net.blue .net-num{color:#3e7cad}.net.blue .net-icon,.net.blue .net-bar i{background:#3f78a4;width:70%}
+.net.red .net-num{color:#ef453f}.net.red .net-icon,.net.red .net-bar i{background:#e9483f;width:55%}
+.net.orange .net-num{color:#ffae16}.net.orange .net-icon,.net.orange .net-bar i{background:#ffb61b;width:45%}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:30px}
+.report{min-height:446px}.report .body{padding:28px}
+.big-stats{display:flex;justify-content:space-around;margin-bottom:14px;padding:0 18px}.bigstat{text-align:center}.bigstat .v{font-size:24px;font-weight:900;letter-spacing:-.3px}.bigstat .l{font-size:15px;color:#5966dc;margin-top:8px;font-weight:800}.bigstat.green .v{color:#11b884}
+.barchart{height:290px;display:flex;align-items:flex-end;gap:12px;border-bottom:1px solid #ddd;padding:10px 30px 0}
+.bargrp{height:100%;flex:1;display:flex;align-items:flex-end;justify-content:center;gap:6px}
+.bargrp i{width:18px;border-radius:1px 1px 0 0;background:#5966dc}.bargrp i:nth-child(2){background:#55a9e2}
+.hlabels{display:flex;justify-content:space-around;color:#999;font-size:13px;margin-top:10px}
+.hchart{height:285px;display:flex;flex-direction:column;justify-content:space-between;padding:18px 32px}
+.hrow{display:flex;align-items:center;gap:12px}.hrow span{width:75px;color:#999;font-size:14px;text-align:right}.hrow .hb{height:23px;background:#5967df;border-radius:1px;transition:.2s}.hrow:nth-child(2) .hb{background:#5966dc}.hrow:nth-child(3) .hb{background:#5966dc}.hrow:nth-child(4) .hb{background:#5966dc}.hrow:nth-child(5) .hb{background:#5966dc}
+
+/* dashboard 2 */
+.download{height:84px;display:flex;align-items:center;justify-content:space-between;padding:0 25px;font-size:16px;font-weight:800}
+.download button{border:0;background:#eee;border-radius:4px;padding:9px 18px;font-weight:800}
+.green-circle{width:38px;height:38px;border-radius:50%;background:#11b884;color:#fff;display:grid;place-items:center}
+.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:28px}
+.kpi{min-height:292px}.kpi .card-body{text-align:center}.mini-bars{height:70px;display:flex;align-items:flex-end;justify-content:center;gap:5px;margin:10px 0 15px}.mini-bars i{width:10px;background:#b9e7d9}.mini-bars i:nth-child(odd){background:#11b884}
+.kpi .money{font-size:38px;font-weight:900;color:#11b884;letter-spacing:-.8px}.kpi.blue .money{color:#5966dc}.kpi .sub{font-size:16px;margin-top:14px;font-weight:700}.up{color:#11b884}.down{color:#ef4740}
+.product{min-height:310px}.product .big{font-size:28px;font-weight:900;text-align:center;margin:18px}.product-stats{display:grid;grid-template-columns:1fr 1fr;gap:35px}.ps{text-align:center;font-weight:800}.ps .value{font-size:24px;margin:8px}.progress{height:6px;background:#e7eaed;border-radius:5px;overflow:hidden}.progress i{display:block;height:100%;background:#5966dc;margin-right:auto;width:72%}
+.status{min-height:360px}.status-controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.date{border:1px solid #dfe3e8;border-radius:5px;padding:11px 15px;color:#555}.legend span{margin-right:20px}.legend .ok{color:#11b884}.legend .bad{color:#ef4740}.linechart{height:245px;border-top:1px solid #eee;position:relative;background:repeating-linear-gradient(to bottom,transparent 0,transparent 46px,#e7e9ec 47px)}
+.linechart:before{content:"";position:absolute;left:5%;right:5%;top:40px;height:130px;border-bottom:4px dotted #11b884;border-radius:50%;transform:skewX(-14deg)}
+.donut{min-height:390px}.donut-wrap{height:290px;display:grid;place-items:center;position:relative}.donut-ring{width:205px;height:205px;border-radius:50%;background:conic-gradient(#5967df 0 65%,#e5e6e7 65%);position:relative;box-shadow:0 0 0 1px rgba(0,0,0,.015)}.donut-ring:after{content:"";position:absolute;inset:47px;background:#fff;border-radius:50%}.donut-label{position:absolute;z-index:2;text-align:center;font-size:22px;font-weight:900}.donut-label small{display:block;font-size:14px;margin-top:5px;font-weight:700}
+@media(max-width:1450px){.sidebar{width:330px}.network-grid{grid-template-columns:repeat(2,1fr)}.main{padding:0 22px}.rail{left:12px}.rail-bottom{left:12px}}
+.content:after{content:"";display:block;height:1px}
+.net-bar,.progress{box-shadow:inset 0 1px 1px rgba(0,0,0,.025)}
+</style>
+</head>
+<body>
+<div class="app">
+<main class="main">
+  <header class="top">
+    <div class="top-right">
+      <h1 class="title">داشبورد</h1>
+      <div class="breadcrumb"><a href="#">فروش و مدیریت مشتری</a><span> / </span><b>داشبورد</b></div>
+    </div>
+    <div class="toolbar">
+      <div class="avatar"></div>
+      <button class="iconbtn">♧</button>
+      <button class="iconbtn"><span class="dot"></span>▱</button>
+      <button class="iconbtn">＋</button>
+      <div class="search"><span>⌕</span><input value="" placeholder="جستجو"></div>
+    </div>
+  </header>
+
+  <div class="switch">
+    <button class="active" onclick="showTab(1,this)">نمایش اول</button>
+    <button onclick="showTab(2,this)">نمایش دوم</button>
+  </div>
+
+  <section id="tab1" class="tab-panel active content">
+    <div class="card">
+      <div class="sales-network">
+        <div class="sales-title">شبکه های فروش</div>
+        <div class="nav-arrows"><button class="arrow">‹</button><button class="arrow">›</button></div>
+        <div class="network-grid">
+          <div class="net green"><div class="net-head"><span>واتس اپ</span><span class="net-num">۸۷۴</span><span class="net-icon">◔</span></div><div class="net-bar"><i></i></div></div>
+          <div class="net blue"><div class="net-head"><span>اینستاگرام</span><span class="net-num">۱,۹۶۸</span><span class="net-icon">◎</span></div><div class="net-bar"><i></i></div></div>
+          <div class="net red"><div class="net-head"><span>گوگل</span><span class="net-num">۳۶۵۴</span><span class="net-icon">◎</span></div><div class="net-bar"><i></i></div></div>
+          <div class="net orange"><div class="net-head"><span>سایر</span><span class="net-num">۲۶</span><span class="net-icon">★</span></div><div class="net-bar"><i></i></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="card report"><div class="card-head">گزارشات</div><div class="body">
+        <div class="big-stats"><div class="bigstat"><div class="v" style="color:#5966dc">۵۶,۲۳۴,۰۷۶ تومان</div><div class="l">مجموع فروش</div></div><div class="bigstat green"><div class="v">۶۲۰,۰۷۶ تومان</div><div class="l">میانگین</div></div></div>
+        <div class="barchart">
+          <div class="bargrp"><i style="height:12%"></i><i style="height:40%"></i></div><div class="bargrp"><i style="height:18%"></i><i style="height:89%"></i></div><div class="bargrp"><i style="height:22%"></i><i style="height:76%"></i></div><div class="bargrp"><i style="height:78%"></i><i style="height:68%"></i></div><div class="bargrp"><i style="height:15%"></i><i style="height:32%"></i></div><div class="bargrp"><i style="height:44%"></i><i style="height:68%"></i></div><div class="bargrp"><i style="height:18%"></i><i style="height:64%"></i></div><div class="bargrp"><i style="height:60%"></i><i style="height:19%"></i></div></div>
+        <div class="hlabels"><span>مهر</span><span>آبان</span><span>آذر</span><span>دی</span><span>بهمن</span><span>اسفند</span><span>فروردین</span><span>اردیبهشت</span></div>
+      </div></div>
+      <div class="card report"><div class="card-head">فروش های منطقه‌ای</div><div class="body">
+        <div class="hchart">
+          <div class="hrow"><span>آفریقا</span><div class="hb" style="width:80%"></div></div>
+          <div class="hrow"><span>آسیا</span><div class="hb" style="width:70%"></div></div>
+          <div class="hrow"><span>اروپا</span><div class="hb" style="width:12%"></div></div>
+          <div class="hrow"><span>آمریکای لاتین</span><div class="hb" style="width:40%"></div></div>
+          <div class="hrow"><span>آمریکای شمالی</span><div class="hb" style="width:61%"></div></div>
+        </div>
+        <div style="display:flex;justify-content:space-around;font-weight:900;font-size:18px"><span style="color:#ef4740">۲۰,۰۷۶ تومان</span><span style="color:#ffae16">۶۲۰,۰۷۶ تومان</span><span style="color:#5966dc">۴,۲۳۴,۰۷۶ تومان</span></div>
+      </div></div>
+    </div>
+  </section>
+
+  <section id="tab2" class="tab-panel content">
+    <div class="card download"><span>گزارش آماده شد. هم اکنون می‌توانید آن را دریافت کنید</span><button>دریافت</button><span class="green-circle">↓</span></div>
+    <div class="kpi-grid">
+      <div class="card kpi blue"><div class="card-head">کل مشتریان</div><div class="card-body"><div class="mini-bars"><i style="height:30%"></i><i style="height:52%"></i><i style="height:80%"></i><i style="height:62%"></i><i style="height:45%"></i><i style="height:68%"></i><i style="height:55%"></i><i style="height:82%"></i></div><div class="money">۱,۲۴۱</div><div class="sub">۳٪ افزایش در هفته پیش <span class="up">▲</span></div></div></div>
+      <div class="card kpi"><div class="card-head">میانگین ارزش سفارش</div><div class="card-body"><div class="mini-bars"><i style="height:40%"></i><i style="height:70%"></i><i style="height:90%"></i><i style="height:65%"></i><i style="height:76%"></i><i style="height:55%"></i><i style="height:78%"></i><i style="height:61%"></i></div><div class="money">۷۳۲,۵۲۰ تومان</div><div class="sub">۴ واحد کمتر از هفته پیش <span class="down">▼</span></div></div></div>
+    </div>
+    <div class="grid2">
+      <div class="card product"><div class="card-head">فروش محصولات</div><div class="card-body"><div class="big">۶۵,۳۵۳</div><div class="product-stats"><div class="ps">مجموع قیمت<div class="value">۱۴,۳۳۴</div><div class="progress"><i style="width:80%"></i></div><small class="up">۱۰٪ افزایش ▲</small></div><div class="ps">مجموع موجودی<div class="value">۲,۲۱۴</div><div class="progress"><i style="width:25%"></i></div><small class="down">۱۴٪ کاهش ▼</small></div></div></div></div>
+      <div class="card donut"><div class="card-head">شبکه های فروش</div><div class="card-body"><div class="donut-wrap"><div class="donut-ring"></div><div class="donut-label">۶۵٪<small>میانگین</small></div></div><div style="font-weight:800">گوگل</div></div></div>
+    </div>
+    <div class="card status"><div class="card-head">وضعیت خرید</div><div class="card-body"><div class="status-controls"><div class="date">۲۰۲۶/۰۹/۲۴ - ۲۰۲۶/۰۸/۲۶　▣</div><div class="legend"><span class="ok">● موفقیت</span><span class="bad">● بازگشت</span></div></div><div class="linechart"></div></div></div>
+  </section>
+</main>
+
+<aside class="sidebar">
+  <div class="sidebar-logo"><svg class="flame" viewBox="0 0 50 60"><path fill="currentColor" d="M31 2c4 13-5 17-2 25 2 5 8 7 8 15 0 9-7 16-18 16C8 58 1 50 3 40c2-10 10-13 10-25 8 4 8 11 8 16 7-6 8-16 10-29z"/></svg><span>Nextable</span></div>
+  <div class="sidebar-inner">
+    <div class="side-title">داشبورد</div>
+    <div class="side-menu">
+      <div class="side-item active">فروش و مدیریت مشتری</div>
+      <div class="side-item dot">پشتیبانی</div>
+      <div class="side-item">آمار وب سایت</div>
+      <div class="side-item section">سایر</div>
+      <div class="side-item">ویجت های بیشتر</div>
+    </div>
+    <div class="side-summary">
+      <div class="summary-title">خلاصه</div>
+      <div class="summary">
+        <div class="summary-row"><span class="sicon orange">▥</span><div><div class="l">مجموع فروش</div><div class="n">۱۵,۶۸۷</div></div></div>
+        <div class="summary-row"><span class="sicon green">✉</span><div><div class="l">مجموع تیکت ها</div><div class="n">۲۱۴</div></div></div>
+        <div class="summary-row"><span class="sicon sky">♙</span><div><div class="l">بازدید کنندگان</div><div class="n">۳۰,۲۱۳</div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="rail">
+    <div class="rail-item">◔<span class="tiny"></span></div>
+    <div class="rail-item">◇</div><div class="rail-item">♜</div><div class="rail-item">▣</div><div class="rail-item">♙</div>
+  </div>
+  <div class="rail-bottom"><span>⚙</span><span>◯</span></div>
+</aside>
+</div>
+<script>
+function showTab(n,btn){
+  document.querySelectorAll('.tab-panel').forEach(x=>x.classList.remove('active'));
+  document.getElementById('tab'+n).classList.add('active');
+  document.querySelectorAll('.switch button').forEach(x=>x.classList.remove('active'));
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>
