@@ -29,7 +29,6 @@ function logout_user(): void {
 function has_permission(string $resource, string $action='view'): bool {
     $user=current_user();
     if (!$user) return false;
-    if (($user['username'] ?? '') === 'admin') return true;
     $groupId=(int)($user['access_group_id'] ?? 0);
     if (!$groupId) return false;
     $allowed=['view'=>'can_view','create'=>'can_create','edit'=>'can_edit','delete'=>'can_delete'];
